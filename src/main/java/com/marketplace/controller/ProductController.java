@@ -4,6 +4,7 @@ import com.marketplace.model.Product;
 import com.marketplace.repository.ProductRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -22,9 +23,23 @@ public class ProductController {
         return productRepository.findAll();
     }
 
+    @GetMapping("/{id}")
+    public Product getById(@PathVariable Long id) {
+        return productRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+    }
+
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public Product create(@RequestBody Product product) {
         return productRepository.save(product);
     }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable Long id) {
+        productRepository.deleteById(id);
+    }
 }
+
+
