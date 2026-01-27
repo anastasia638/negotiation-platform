@@ -1,4 +1,4 @@
-# SA7 Marketplace — Negotiation System (LIFPROJET)
+# SA7 Marketplace — Negotiation System 
 
 ## Objectif
 Ce projet implémente un mini “marketplace” où des agents acheteurs et vendeurs négocient le prix d’un produit via des stratégies de négociation.

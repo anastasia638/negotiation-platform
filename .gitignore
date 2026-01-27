@@ -30,7 +30,3 @@ application-local.properties
 # Logs
 logs/
 *.log
-////.gitignore sert à dire à Git quels fichiers/dossiers ne doivent pas être versionnés 
-//(pas de git add, pas de commit), typiquement les fichiers générés automatiquement 
-//(ex: target/ de Maven), les fichiers d’IDE (.idea/, .vscode/), logs, fichiers macOS .DS_Store, etc.
-//Comme ça, votre repo GitLab reste propre et léger, et chacun peut regénérer ces fichiers localement sans les partager.

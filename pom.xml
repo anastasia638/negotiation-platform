@@ -72,6 +72,4 @@
     </build>
 
 </project>
-//Le fichier pom.xml sert de carte d’identité et de configuration pour Maven 
-//: il dit à Maven “c’est quoi ce projet”, “quelles dépendances installer” (Spring Boot, JPA, H2, tests…),
-//“quelle version de Java”, et “comment builder/exécuter” le projet.
+
