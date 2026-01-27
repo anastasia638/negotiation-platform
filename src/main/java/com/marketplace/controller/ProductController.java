@@ -40,6 +40,17 @@ public class ProductController {
     public void delete(@PathVariable Long id) {
         productRepository.deleteById(id);
     }
+    @PutMapping("/{id}")
+    public Product update(@PathVariable Long id, @RequestBody Product body) {
+    Product p = productRepository.findById(id)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+    p.setName(body.getName());
+    p.setBasePrice(body.getBasePrice());
+
+    return productRepository.save(p);
+}
+
 }
 
 
