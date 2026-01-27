@@ -1,6 +1,9 @@
 package com.marketplace.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 
 @Entity
 @Table(name = "products")
@@ -11,8 +14,11 @@ public class Product {
     private Long id;
 
     @Column(nullable = false)
+    @NotBlank(message = "name must not be blank")
     private String name;
 
+    @NotNull(message = "basePrice is required")
+    @Positive(message = "basePrice must be > 0")
     private Double basePrice;
 
     public Product() {}

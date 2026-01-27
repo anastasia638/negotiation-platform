@@ -2,6 +2,8 @@ package com.marketplace.controller;
 
 import com.marketplace.model.Product;
 import com.marketplace.repository.ProductRepository;
+import jakarta.validation.Valid;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
@@ -31,26 +33,29 @@ public class ProductController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Product create(@RequestBody Product product) {
+    public Product create(@Valid @RequestBody Product product) {
         return productRepository.save(product);
+    }
+
+    @PutMapping("/{id}")
+    public Product update(@PathVariable Long id, @Valid @RequestBody Product body) {
+        Product p = productRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+        p.setName(body.getName());
+        p.setBasePrice(body.getBasePrice());
+
+        return productRepository.save(p);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Long id) {
-        productRepository.deleteById(id);
+        try {
+            productRepository.deleteById(id);
+        } catch (EmptyResultDataAccessException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
     }
-    @PutMapping("/{id}")
-    public Product update(@PathVariable Long id, @RequestBody Product body) {
-    Product p = productRepository.findById(id)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-
-    p.setName(body.getName());
-    p.setBasePrice(body.getBasePrice());
-
-    return productRepository.save(p);
 }
-
-}
-
 
