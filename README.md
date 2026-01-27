@@ -1,18 +1,17 @@
-# SA7 Marketplace - Multi-Agent Negotiation System
+# SA7 Marketplace — Negotiation System (LIFPROJET)
 
-## Description
-Système multi-agents pour négociation dans un marché virtuel.
+## Objectif
+Ce projet implémente un mini “marketplace” où des agents acheteurs et vendeurs négocient le prix d’un produit via des stratégies de négociation.
+L’application expose une API REST pour démarrer une négociation et suivre son état, et persiste les produits/offres.
 
-## Structure du Projet
-- **agent/** - Agents acheteurs/vendeurs
-- **model/** - Entités métier
-- **repository/** - Accès données
-- **service/** - Logique métier
-- **controller/** - API REST
-- **dto/** - Data Transfer Objects
+## Choix techniques
+- Java 17, Spring Boot
+- Spring Web (API REST)
+- Spring Data JPA + H2 (dev)
 
-## Installation
+## Lancer en local
+Prérequis : Java 17 + Maven.
+
 ```bash
-mvn clean install
-
-//README.md : c’est la “page d’accueil” du repo, pour expliquer le projet (souvent affiché directement sur GitLab)
+mvn clean test
+mvn spring-boot:run
