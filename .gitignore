@@ -1,0 +1,36 @@
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+.mvn/timing.properties
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+*.class
+
+# Spring Boot
+.env
+.env.local
+application-local.properties
+
+# Build
+*.jar
+*.war
+*.ear
+
+# Logs
+logs/
+*.log
+////.gitignore sert à dire à Git quels fichiers/dossiers ne doivent pas être versionnés 
+//(pas de git add, pas de commit), typiquement les fichiers générés automatiquement 
+//(ex: target/ de Maven), les fichiers d’IDE (.idea/, .vscode/), logs, fichiers macOS .DS_Store, etc.
+//Comme ça, votre repo GitLab reste propre et léger, et chacun peut regénérer ces fichiers localement sans les partager.
