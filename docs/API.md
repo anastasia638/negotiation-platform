@@ -8,7 +8,7 @@ GET /api/health
 
 ## Products
 GET /api/products  
-GET /api/products/{id}  
+GET /api/products/{id}
 POST /api/products  
 PUT /api/products/{id}  
 DELETE /api/products/{id}
@@ -22,8 +22,25 @@ DELETE /api/products/{id}
 
 ### Examples (curl)
 
-#### Create (201)
-```bash
+#### Create (201) 
 curl -i -H "Content-Type: application/json" \
   -d '{"name":"Keyboard","basePrice":49.99}' \
   http://127.0.0.1:8080/api/products
+
+#### Create (400) 
+curl -i -H "Content-Type: application/json" \
+  -d '{"name":"   ","basePrice":-1}' \
+  http://127.0.0.1:8080/api/products
+#### list (200)
+curl -i http://127.0.0.1:8080/api/products
+### Get by id (200)
+curl -i http://127.0.0.1:8080/api/products/1
+### getbyidnotfound(404)
+curl -i http://127.0.0.1:8080/api/products/999999999
+### update(200)
+curl -i -X PUT -H "Content-Type: application/json" \
+  -d '{"name":"Keyboard V2","basePrice":59.99}' \
+  http://127.0.0.1:8080/api/products/1
+### delete (204) 
+curl -i -X DELETE http://127.0.0.1:8080/api/products/1
+### 

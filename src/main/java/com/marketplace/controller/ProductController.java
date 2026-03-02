@@ -42,8 +42,13 @@ public class ProductController {
         Product p = productRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
+        // ✅ CORRECTION : Utilise les nouveaux attributs
         p.setName(body.getName());
-        p.setBasePrice(body.getBasePrice());
+        p.setPriceMin(body.getPriceMin());
+        p.setPriceMax(body.getPriceMax());
+        p.setCategory(body.getCategory());
+        p.setBrand(body.getBrand());
+        p.setStockQuantity(body.getStockQuantity());
 
         return productRepository.save(p);
     }
