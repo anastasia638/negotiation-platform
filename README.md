@@ -5,7 +5,8 @@
 ![Database](https://img.shields.io/badge/database-PostgreSQL-316192?style=flat-square&logo=postgresql)
 ![Docker](https://img.shields.io/badge/container-Docker-2496ED?style=flat-square&logo=docker)
 
-> A web platform allowing buyers and sellers to negotiate product prices through structured offers and counter-offers, built with Java Spring Boot and PostgreSQL.
+> A web platform allowing buyers and sellers to negotiate product prices through
+>  structured offers and counter-offers, built with Java Spring Boot and PostgreSQL.
 
 ---
 
