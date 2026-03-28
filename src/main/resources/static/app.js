@@ -1519,52 +1519,49 @@ function initCursor() {
   document.addEventListener('mouseenter', () => { dot.style.opacity = '1'; ring.style.opacity = '1'; });
 }
 
-// ==================== PRELOADER ====================
+// ==================== PRELOADER — flash cinéma rapide ====================
 function initPreloader(onDone) {
-  const pl   = document.getElementById('preloader');
-  const el1  = document.getElementById('pl-line1');
-  const el2  = document.getElementById('pl-line2');
-  const bar  = document.getElementById('pl-bar');
-  if (!pl || !el1 || !el2) { onDone(); return; }
+  const pl  = document.getElementById('preloader');
+  const el1 = document.getElementById('pl-line1');
+  const el2 = document.getElementById('pl-line2');
+  if (!pl) { onDone(); return; }
 
-  const word1 = 'Couture';
-  const word2 = 'Marketplace';
-  const totalChars = word1.length + word2.length;
-  let typed = 0;
+  // Texte statique (pas de typing → pas d'attente)
+  if (el1) el1.textContent = 'Couture';
+  if (el2) el2.textContent = 'Marketplace';
 
-  function updateBar() {
-    typed++;
-    if (bar) bar.style.width = Math.round((typed / totalChars) * 100) + '%';
-  }
-
-  function type(el, text, speed, cb) {
-    let i = 0;
-    function step() {
-      if (i < text.length) {
-        el.textContent += text[i++];
-        updateBar();
-        setTimeout(step, speed + Math.random() * 30);
-      } else if (cb) cb();
-    }
-    step();
-  }
-
-  // Start typing after a brief pause
+  // Afficher brièvement (0.55s) puis fade out rapide
   setTimeout(() => {
-    type(el1, word1, 75, () => {
-      setTimeout(() => {
-        type(el2, word2, 60, () => {
-          // Remove blinking cursor from line1 after done
-          el1.style.setProperty('--cur', 'none');
-          setTimeout(() => {
-            pl.classList.add('hidden');
-            setTimeout(onDone, 900);
-          }, 700);
-        });
-      }, 180);
-    });
-  }, 200);
+    pl.classList.add('hidden');
+    // Lancer le contenu pendant le fade out → seamless
+    onDone();
+    // Retirer du DOM après la transition
+    setTimeout(() => { pl.style.display = 'none'; }, 500);
+  }, 550);
 }
+
+// ==================== SWING BAR ====================
+function initSwingBar() {
+  const bar = document.getElementById('swing-bar');
+  if (!bar) return;
+
+  let visible = false;
+
+  window.addEventListener('scroll', () => {
+    const shouldShow = window.scrollY > 120;
+    if (shouldShow !== visible) {
+      visible = shouldShow;
+      if (visible) {
+        bar.classList.add('visible');
+      } else {
+        bar.classList.remove('visible');
+      }
+    }
+  }, { passive: true });
+}
+
+window.scrollToTop    = () => window.scrollTo({ top: 0, behavior: 'smooth' });
+window.scrollToBottom = () => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
 
 // ==================== PAGE TRANSITION ====================
 let _transitioning = false;
@@ -1707,14 +1704,13 @@ window.navigate = function(page, params) {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
-  // Init cursor immediately (no waiting)
   initCursor();
+  initSwingBar();
 
-  // Launch preloader, then boot the app
   initPreloader(() => {
     updateNavAgent();
     initScrollProgress();
-    _origNavigate('accueil'); // bypass transition on first load
-    setTimeout(() => { initScrollReveal(); initTilt(); initCounters(); }, 400);
+    _origNavigate('accueil');
+    setTimeout(() => { initScrollReveal(); initTilt(); initCounters(); }, 300);
   });
 });
