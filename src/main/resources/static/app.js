@@ -28,6 +28,7 @@ const S = {
   users:           [],
   products:        [],
   currentPage:     'accueil',
+  customAgents:    JSON.parse(localStorage.getItem('sa7_custom_agents') || '[]'),
   // negotiation state
   negoProduct:     null,
   negoNegotiations:[],     // [{negId, sellerId, sellerName, status, offers:[]}]
@@ -253,6 +254,26 @@ async function renderAccueil() {
         </div>`;
     }).join('');
 
+    const customCards = S.customAgents.map((a, i) => {
+      const isActive = S.activeAgent && S.activeAgent.email === a.email;
+      const solde = Math.round(a.budget * 0.9);
+      return `
+        <div class="agent-card ${isActive ? 'active' : ''}" onclick="selectCustomAgent(${i})">
+          ${isActive ? '<span class="agent-badge badge-actif">Actif</span>' : '<span class="agent-badge" style="background:var(--gold);color:#000">Custom</span>'}
+          <div class="agent-card-header">
+            <div class="agent-avatar" style="background:linear-gradient(135deg,#a855f7,#333)">${a.name.charAt(0).toUpperCase()}</div>
+            <div>
+              <div class="agent-name">${a.name}</div>
+              <div class="agent-id">Agent personnalisé</div>
+            </div>
+          </div>
+          <div class="agent-row"><span class="agent-row-label">Stratégie</span><span class="agent-row-value">${a.strategy}</span></div>
+          <div class="agent-row"><span class="agent-row-label">Budget max</span><span class="agent-row-value">${fmt(a.budget)}</span></div>
+          <div class="agent-row"><span class="agent-row-label">Solde actuel</span><span>${fmt(solde)}</span></div>
+          <div class="budget-bar"><div class="budget-bar-fill" style="width:90%"></div></div>
+        </div>`;
+    }).join('');
+
     app.innerHTML = `
       <div class="page">
         <div class="page-header">
@@ -260,7 +281,7 @@ async function renderAccueil() {
           <p>Choisissez un agent acheteur pour commencer à négocier</p>
         </div>
 
-        <div class="grid grid-3">${agentCards || '<div class="empty-state"><div class="empty-icon">👤</div><p>Aucun agent disponible</p></div>'}</div>
+        <div class="grid grid-3">${(agentCards + customCards) || '<div class="empty-state"><div class="empty-icon">👤</div><p>Aucun agent disponible</p></div>'}</div>
 
         <div class="protocol-section">
           <h2>Choisissez un protocole de négociation</h2>
@@ -310,6 +331,25 @@ async function selectAgent(id, name, email, strategy, strategyKey, budget) {
   } catch(e) {
     toast('Erreur de connexion: ' + e.message, 'error');
   }
+}
+
+async function selectCustomAgent(i) {
+  const a = S.customAgents[i];
+  if (!a) return;
+  try {
+    const auth = await apiLogin(a.email, 'password');
+    S.token = auth.token;
+    localStorage.setItem('sa7_token', auth.token);
+    S.activeAgent = { id: null, name: a.name, email: a.email, strategy: a.strategy, strategyKey: a.strategyKey, budget: a.budget, solde: a.budget };
+    localStorage.setItem('sa7_agent', JSON.stringify(S.activeAgent));
+  } catch(e) {
+    // Agent not in DB yet → use locally only
+    S.activeAgent = { id: null, name: a.name, email: a.email, strategy: a.strategy, strategyKey: a.strategyKey, budget: a.budget, solde: a.budget };
+    localStorage.setItem('sa7_agent', JSON.stringify(S.activeAgent));
+  }
+  updateNavAgent();
+  toast(`Agent ${a.name} sélectionné ✓`, 'success');
+  navigate('accueil');
 }
 
 // ==================== PAGE: MARKETPLACE ====================
@@ -772,104 +812,163 @@ async function renderMarcheCentralise() {
         <div id="centralise-result"></div>
       </div>`;
 
+    function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
     window.runCentralise = async () => {
-      const cat     = document.getElementById('cc-cat').value;
-      const nbB     = parseInt(document.getElementById('cc-nb-buyers').value);
-      const catProds= products.filter(p => p.category === cat);
+      const cat      = document.getElementById('cc-cat').value;
+      const nbB      = parseInt(document.getElementById('cc-nb-buyers').value);
+      const catProds = products.filter(p => p.category === cat);
 
       if (!catProds.length) { toast('Aucun produit dans cette catégorie', 'error'); return; }
 
       const selectedBuyers  = buyers.slice(0, nbB);
       const selectedSellers = catProds.slice(0, 3);
+      const nbSellers = selectedSellers.length;
+      const maxRounds = 15;
       const resultEl = document.getElementById('centralise-result');
-      resultEl.innerHTML = loader();
 
-      // Show 3-step process animation
+      // Show 3-step animation + round area
       resultEl.innerHTML = `
         <div style="margin-top:28px">
           <div class="process-steps" id="steps">
-            <div class="step active" id="step1">
-              <div class="step-num">1</div>
-              <div class="step-label">Collection des Offres</div>
-              <div class="step-sub">(Bids)</div>
-            </div>
-            <div class="step" id="step2">
-              <div class="step-num">2</div>
-              <div class="step-label">Collection des Demandes</div>
-              <div class="step-sub">(Asks)</div>
-            </div>
-            <div class="step" id="step3">
-              <div class="step-num">3</div>
-              <div class="step-label">Matching & Transaction</div>
-              <div class="step-sub"></div>
-            </div>
+            <div class="step active" id="step1"><div class="step-num">1</div><div class="step-label">Collection des Offres</div><div class="step-sub">(Bids)</div></div>
+            <div class="step" id="step2"><div class="step-num">2</div><div class="step-label">Collection des Demandes</div><div class="step-sub">(Asks)</div></div>
+            <div class="step" id="step3"><div class="step-num">3</div><div class="step-label">Enchère par Rounds</div><div class="step-sub">(Matching)</div></div>
           </div>
-          <div id="step-content" style="margin-top:16px">${loader()}</div>
+
+          <!-- Round indicator -->
+          <div id="round-indicator" style="display:none;margin:20px 0;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+            <span id="round-badge" style="font-size:18px;font-weight:600;font-family:var(--font-serif)">🔄 Round 0/${maxRounds}</span>
+            <span id="sellers-matched" style="font-size:14px;padding:4px 12px;border:1px solid var(--border)">Vendeurs 0/${nbSellers}</span>
+            <span id="transactions-count" style="font-size:14px;color:var(--gold)">Transactions : 0</span>
+          </div>
+
+          <div id="step-content" style="margin-top:8px">${loader()}</div>
+
+          <!-- Transaction history (live) -->
+          <div id="tx-history" style="display:none;margin-top:20px">
+            <h4 style="font-family:var(--font-serif);margin-bottom:12px;font-size:15px">📜 Historique de transactions</h4>
+            <div id="tx-list" style="display:flex;flex-direction:column;gap:8px"></div>
+          </div>
         </div>`;
 
-      // Simulate Step 1: Collect bids from buyers
-      await sleep(1200);
+      // Step 1 — collect bids
+      await sleep(1100);
       document.getElementById('step1').classList.add('done');
       document.getElementById('step2').classList.add('active');
 
-      const bids = selectedBuyers.map((u, i) => {
+      // Initial bids: ~60-75% of priceMax, vary by buyer
+      let currentBids = selectedBuyers.map((u, i) => {
         const p = AGENT_PROFILES[i] || AGENT_PROFILES[0];
-        const bid = Math.round(catProds[0].priceMax * (0.6 + Math.random() * 0.25));
-        return { buyer: u.name, strategy: p.strategy, bid };
+        const base = catProds[0].priceMax * (0.58 + i * 0.04 + Math.random() * 0.04);
+        return { buyer: u.name, buyerShort: 'Acheteur' + (i+1), bid: Math.round(base), budgetMax: p.budget, matched: false };
       });
 
-      // Simulate Step 2: Collect asks from sellers
+      // Step 2 — collect asks
       await sleep(1000);
       document.getElementById('step2').classList.add('done');
       document.getElementById('step3').classList.add('active');
 
-      const asks = selectedSellers.map(p => {
-        const ask = Math.round(p.priceMin * (1.05 + Math.random() * 0.15));
-        return { seller: p.sellerName, product: p.name, ask, priceMin: p.priceMin };
+      // Initial asks: ~125-135% of priceMin (sellers start high)
+      let currentAsks = selectedSellers.map((p, i) => {
+        const base = p.priceMin * (1.28 - i * 0.03 + Math.random() * 0.05);
+        return { seller: p.sellerName || ('Vendeur'+(i+1)), sellerShort: 'Vendeur'+(i+1), product: p.name, ask: Math.round(base), floor: p.priceMin, matched: false };
       });
 
-      // Simulate Step 3: Matching
-      await sleep(1200);
+      await sleep(800);
       document.getElementById('step3').classList.add('done');
 
-      // Simple matching: sort bids desc, asks asc, match pairs
-      const sortedBids = [...bids].sort((a,b) => b.bid - a.bid);
-      const sortedAsks = [...asks].sort((a,b) => a.ask - b.ask);
-      const matches = [];
-      for (let i = 0; i < Math.min(sortedBids.length, sortedAsks.length); i++) {
-        if (sortedBids[i].bid >= sortedAsks[i].ask) {
-          const price = Math.round((sortedBids[i].bid + sortedAsks[i].ask) / 2);
-          const surplus = sortedBids[i].bid - price;
-          matches.push({ buyer: sortedBids[i].buyer, seller: sortedAsks[i].seller, product: sortedAsks[i].product, price, surplus });
+      // Show round indicator
+      document.getElementById('round-indicator').style.display = 'flex';
+      document.getElementById('step-content').innerHTML = '';
+
+      const transactions = [];
+      let round = 0;
+
+      function refreshRoundUI() {
+        const matchedSellers = currentAsks.filter(a => a.matched).length;
+        document.getElementById('round-badge').textContent = `🔄 Round ${round}/${maxRounds}`;
+        document.getElementById('sellers-matched').textContent = `Vendeurs ${matchedSellers}/${nbSellers}`;
+        document.getElementById('transactions-count').textContent = `Transactions : ${transactions.length}`;
+
+        if (transactions.length > 0) {
+          document.getElementById('tx-history').style.display = 'block';
+          document.getElementById('tx-list').innerHTML = transactions.map(tx => `
+            <div style="display:flex;align-items:center;gap:10px;font-size:13px;padding:8px 12px;background:var(--white);border-left:3px solid var(--gold)">
+              <span style="color:var(--grey);min-width:70px">Round ${tx.round}</span>
+              <span style="font-weight:600">${tx.buyerShort}</span>
+              <span style="color:var(--grey)">→</span>
+              <span style="font-weight:600">${tx.sellerShort}</span>
+              <span style="color:var(--grey)">:</span>
+              <span style="color:var(--gold);font-weight:700;margin-left:auto">${fmt(tx.price)}</span>
+            </div>`).join('');
         }
+
+        // Live bids/asks table in step-content
+        document.getElementById('step-content').innerHTML = `
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;font-size:13px">
+            <div>
+              <div style="font-size:11px;letter-spacing:.1em;color:var(--grey);margin-bottom:8px">OFFRES ACHETEURS</div>
+              ${currentBids.filter(b=>!b.matched).map(b=>`
+                <div style="display:flex;justify-content:space-between;padding:6px 10px;background:var(--cream2);margin-bottom:4px">
+                  <span>${b.buyer}</span><span style="color:var(--gold);font-weight:600">${fmt(b.bid)}</span>
+                </div>`).join('') || '<div style="color:var(--grey);padding:8px">Tous les acheteurs ont conclu</div>'}
+            </div>
+            <div>
+              <div style="font-size:11px;letter-spacing:.1em;color:var(--grey);margin-bottom:8px">DEMANDES VENDEURS</div>
+              ${currentAsks.map((a,i)=>`
+                <div style="display:flex;justify-content:space-between;padding:6px 10px;background:var(--cream2);margin-bottom:4px;${a.matched?'opacity:.4;text-decoration:line-through':''}">
+                  <span>${a.seller}</span><span style="color:${a.matched?'var(--grey)':'var(--crimson)'};font-weight:600">${a.matched?'✓ Vendu':fmt(a.ask)}</span>
+                </div>`).join('')}
+            </div>
+          </div>`;
       }
 
-      const matchTable = matches.length ? `
-        <div class="table-wrap" style="margin-top:16px">
-          <table>
-            <thead><tr><th>Acheteur</th><th>Vendeur</th><th>Produit</th><th>Prix Final</th><th>Surplus Acheteur</th></tr></thead>
-            <tbody>
-              ${matches.map(m => `<tr>
-                <td>${m.buyer}</td>
-                <td>${m.seller}</td>
-                <td>${m.product}</td>
-                <td class="text-gold font-bold">${fmt(m.price)}</td>
-                <td class="text-green">+${fmt(m.surplus)}</td>
-              </tr>`).join('')}
-            </tbody>
-          </table>
-        </div>` : '<div class="empty-state" style="padding:30px"><p>Aucun accord trouvé — prix trop éloignés</p></div>';
+      // Run rounds
+      for (round = 1; round <= maxRounds; round++) {
+        // Try to match: sort available bids desc, asks asc
+        const availBids = currentBids.filter(b => !b.matched).sort((a,b) => b.bid - a.bid);
+        const availAsks = currentAsks.filter(a => !a.matched).sort((a,b) => a.ask - b.ask);
 
-      document.getElementById('step-content').innerHTML = `
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px">
-          <div class="stat-card"><div class="stat-label">Transactions</div><div class="stat-value">${matches.length}</div></div>
-          <div class="stat-card"><div class="stat-label">Volume Total</div><div class="stat-value text-gold">${fmt(matches.reduce((s,m)=>s+m.price,0))}</div></div>
-          <div class="stat-card"><div class="stat-label">Prix Moyen</div><div class="stat-value">${matches.length ? fmt(Math.round(matches.reduce((s,m)=>s+m.price,0)/matches.length)) : '—'}</div></div>
+        for (let i = 0; i < Math.min(availBids.length, availAsks.length); i++) {
+          if (availBids[i].bid >= availAsks[i].ask) {
+            const price = Math.round((availBids[i].bid + availAsks[i].ask) / 2);
+            transactions.push({
+              round,
+              buyer: availBids[i].buyer, buyerShort: availBids[i].buyerShort,
+              seller: availAsks[i].seller, sellerShort: availAsks[i].sellerShort,
+              product: availAsks[i].product, price
+            });
+            availBids[i].matched = true;
+            availAsks[i].matched = true;
+          }
+        }
+
+        refreshRoundUI();
+
+        // Stop if all sellers matched or no bids left
+        if (currentAsks.every(a => a.matched) || currentBids.every(b => b.matched)) break;
+
+        // Convergence: bids go up ~3%, asks go down ~3%
+        currentBids.forEach(b => { if (!b.matched) b.bid = Math.round(b.bid * 1.03); });
+        currentAsks.forEach(a => { if (!a.matched) a.ask = Math.round(a.ask * 0.97); });
+
+        await sleep(750);
+      }
+
+      // Final summary
+      const totalVol = transactions.reduce((s,t) => s+t.price, 0);
+      const avgPrice = transactions.length ? Math.round(totalVol / transactions.length) : 0;
+      document.getElementById('step-content').innerHTML += `
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:20px">
+          <div class="stat-card"><div class="stat-label">Transactions</div><div class="stat-value">${transactions.length}</div></div>
+          <div class="stat-card"><div class="stat-label">Volume Total</div><div class="stat-value text-gold">${fmt(totalVol)}</div></div>
+          <div class="stat-card"><div class="stat-label">Prix Moyen</div><div class="stat-value">${avgPrice ? fmt(avgPrice) : '—'}</div></div>
         </div>
-        ${matchTable}`;
-    };
+        ${transactions.length === 0 ? '<div class="empty-state" style="padding:24px;margin-top:16px"><p>Aucun accord après '+ round +' rounds — prix trop éloignés</p></div>' : ''}`;
 
-    function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+      toast(`Enchère terminée en ${round} round(s) — ${transactions.length} transaction(s)`, 'success');
+    };
 
   } catch(e) {
     app.innerHTML = `<div class="page"><div class="empty-state"><div class="empty-icon">⚠️</div><p>${e.message}</p></div></div>`;
@@ -973,8 +1072,9 @@ async function renderProfilAgent() {
     const users = S.users.length ? S.users : await apiGetUsers();
     S.users = users;
     const buyers = users.filter(u => u.userType === 'BUYER');
-
-    const totalBudget = AGENT_PROFILES.slice(0, buyers.length).reduce((s, p) => s + p.budget, 0);
+    const allAgents = buyers.length + S.customAgents.length;
+    const totalBudget = AGENT_PROFILES.slice(0, buyers.length).reduce((s, p) => s + p.budget, 0)
+      + S.customAgents.reduce((s, a) => s + a.budget, 0);
 
     const agentCards = buyers.map((u, i) => {
       const p = AGENT_PROFILES[i] || AGENT_PROFILES[0];
@@ -993,38 +1093,129 @@ async function renderProfilAgent() {
             </div>
             ${isActive ? '<span class="agent-badge badge-actif">Actif</span>' : ''}
           </div>
-
           <div style="background:var(--bg2);border-radius:8px;padding:12px;margin-bottom:16px;font-size:13px">
-            <div style="display:flex;justify-content:space-between;margin-bottom:4px">
-              <span style="color:var(--green)">✅ Vente via Négociation (${Math.floor(Math.random()*6)} produits)</span>
-            </div>
-            <div class="budget-bar" style="margin-top:8px">
-              <div class="budget-bar-fill" style="width:${pct}%"></div>
-            </div>
+            <span style="color:var(--green)">✅ Vente via Négociation (${Math.floor(Math.random()*6)} produits)</span>
+            <div class="budget-bar" style="margin-top:8px"><div class="budget-bar-fill" style="width:${pct}%"></div></div>
           </div>
-
           <div class="agent-row"><span class="agent-row-label">Stratégie</span><span class="agent-row-value">${p.strategy}</span></div>
           <div class="agent-row"><span class="agent-row-label">Budget</span><span class="agent-row-value">${fmt(p.budget)}</span></div>
-          <div class="agent-row"><span class="agent-row-label">Solde</span><span style="color:var(--text)">${fmt(solde)}</span></div>
-          <div class="agent-row"><span class="agent-row-label">Pénalités</span><span style="color:var(--red)">0 €</span></div>
+          <div class="agent-row"><span class="agent-row-label">Solde</span><span>${fmt(solde)}</span></div>
+          <div class="agent-row"><span class="agent-row-label">Pénalités</span><span style="color:var(--crimson)">0 €</span></div>
+        </div>`;
+    }).join('');
+
+    const customCards = S.customAgents.map((a, i) => {
+      const isActive = S.activeAgent && S.activeAgent.email === a.email;
+      const solde = Math.round(a.budget * 0.9);
+      const pct = 90;
+      return `
+        <div class="card" style="border-left:3px solid var(--gold)">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px">
+            <div style="display:flex;align-items:center;gap:12px">
+              <div class="agent-avatar" style="background:linear-gradient(135deg,#a855f7,#333)">${a.name.charAt(0)}</div>
+              <div>
+                <div class="agent-name">${a.name}</div>
+                <div style="font-size:12px;color:var(--text3)">Agent personnalisé</div>
+              </div>
+            </div>
+            <span style="font-size:11px;background:var(--gold);color:#000;padding:2px 8px;letter-spacing:.05em">CUSTOM</span>
+          </div>
+          <div style="background:var(--bg2);border-radius:8px;padding:12px;margin-bottom:16px;font-size:13px">
+            <span style="color:var(--green)">✅ Créé manuellement</span>
+            <div class="budget-bar" style="margin-top:8px"><div class="budget-bar-fill" style="width:${pct}%"></div></div>
+          </div>
+          <div class="agent-row"><span class="agent-row-label">Stratégie</span><span class="agent-row-value">${a.strategy}</span></div>
+          <div class="agent-row"><span class="agent-row-label">Budget</span><span class="agent-row-value">${fmt(a.budget)}</span></div>
+          <div class="agent-row"><span class="agent-row-label">Solde</span><span>${fmt(solde)}</span></div>
+          <div class="agent-row"><span class="agent-row-label">Pénalités</span><span style="color:var(--crimson)">0 €</span></div>
+          <button class="btn btn-outline btn-sm" style="margin-top:12px;width:100%;color:var(--crimson);border-color:var(--crimson)" onclick="deleteCustomAgent(${i})">✕ Supprimer</button>
         </div>`;
     }).join('');
 
     app.innerHTML = `
       <div class="page">
-        <div class="page-header">
-          <h1>👤 Profil des Agents Acheteurs</h1>
-          <p>Consultez les soldes, pénalités et produits possédés par chaque agent</p>
+        <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px">
+          <div>
+            <h1>👤 Profil des Agents Acheteurs</h1>
+            <p>Consultez les soldes, pénalités et stratégies de chaque agent</p>
+          </div>
+          <button class="btn btn-primary" onclick="toggleAddAgentForm()">+ Ajouter un agent</button>
+        </div>
+
+        <!-- FORM CRÉATION AGENT -->
+        <div id="add-agent-form" style="display:none;max-width:600px;margin-bottom:32px">
+          <div class="card" style="border-left:3px solid var(--gold)">
+            <h3 style="margin-bottom:20px;font-family:var(--font-serif)">Créer un nouvel agent</h3>
+            <div class="form-group" style="margin-bottom:16px">
+              <label>Nom d'agent</label>
+              <input type="text" id="new-agent-name" placeholder="Ex: Félix Acheteur" />
+            </div>
+            <div class="form-group" style="margin-bottom:16px">
+              <label>Budget initial (€)</label>
+              <input type="number" id="new-agent-budget" value="200000" min="10000" step="5000" />
+            </div>
+            <div class="form-group" style="margin-bottom:24px">
+              <label>Stratégie de négociation</label>
+              <select id="new-agent-strategy">
+                <option value="COOL_HEADED">Adaptatif — équilibre offre/demande</option>
+                <option value="GREEDY">Agressif — cherche le prix le plus bas</option>
+                <option value="FRUGAL">Conservateur — respecte le budget strictement</option>
+              </select>
+            </div>
+            <div style="display:flex;gap:12px">
+              <button class="btn btn-outline" style="flex:1" onclick="toggleAddAgentForm()">Annuler</button>
+              <button class="btn btn-primary" style="flex:2" onclick="createCustomAgent()">✓ Créer l'agent</button>
+            </div>
+          </div>
         </div>
 
         <div class="stats-row">
-          <div class="stat-card"><div class="stat-label">Total Agents</div><div class="stat-value">${buyers.length}</div></div>
+          <div class="stat-card"><div class="stat-label">Total Agents</div><div class="stat-value">${allAgents}</div></div>
           <div class="stat-card"><div class="stat-label">Budget Total</div><div class="stat-value text-gold">${fmt(totalBudget)}</div></div>
-          <div class="stat-card"><div class="stat-label">Pénalités Totales</div><div class="stat-value text-red">0 €</div></div>
+          <div class="stat-card"><div class="stat-label">Agents Custom</div><div class="stat-value">${S.customAgents.length}</div></div>
         </div>
 
-        <div class="grid grid-2">${agentCards}</div>
+        <div class="grid grid-2">${agentCards}${customCards}</div>
       </div>`;
+
+    window.toggleAddAgentForm = () => {
+      const f = document.getElementById('add-agent-form');
+      f.style.display = f.style.display === 'none' ? 'block' : 'none';
+    };
+
+    window.createCustomAgent = async () => {
+      const name     = document.getElementById('new-agent-name').value.trim();
+      const budget   = parseInt(document.getElementById('new-agent-budget').value);
+      const stratKey = document.getElementById('new-agent-strategy').value;
+      const stratMap = { COOL_HEADED: 'Adaptatif', GREEDY: 'Agressif', FRUGAL: 'Conservateur' };
+
+      if (!name) { toast('Veuillez saisir un nom d\'agent', 'error'); return; }
+      if (!budget || budget < 1000) { toast('Budget invalide (min 1 000 €)', 'error'); return; }
+
+      const email = name.toLowerCase().replace(/\s+/g,'') + '_' + Date.now() + '@sa7.com';
+      const agent = { name, email, budget, strategy: stratMap[stratKey], strategyKey: stratKey, color: '#a855f7' };
+
+      try {
+        // Register via API → creates real user in DB
+        await post('/api/auth/register', { name, email, password: 'password', userType: 'BUYER' });
+        toast(`Agent "${name}" créé avec succès !`, 'success');
+      } catch(e) {
+        // Store locally even if API fails (offline / already exists)
+      }
+
+      S.customAgents.push(agent);
+      localStorage.setItem('sa7_custom_agents', JSON.stringify(S.customAgents));
+      renderProfilAgent();
+    };
+
+    window.deleteCustomAgent = (i) => {
+      const name = S.customAgents[i].name;
+      S.customAgents.splice(i, 1);
+      localStorage.setItem('sa7_custom_agents', JSON.stringify(S.customAgents));
+      toast(`Agent "${name}" supprimé`, 'info');
+      renderProfilAgent();
+    };
+
   } catch(e) {
     app.innerHTML = `<div class="page"><div class="empty-state"><div class="empty-icon">⚠️</div><p>${e.message}</p></div></div>`;
   }
