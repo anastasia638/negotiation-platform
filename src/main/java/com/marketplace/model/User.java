@@ -15,7 +15,10 @@ public class User {
     
     @Column(unique = true, nullable = false)
     private String email;
-    
+
+    @Column(nullable = false)
+    private String password;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "user_type")
     private UserType userType;
@@ -50,6 +53,9 @@ public class User {
     public UserType getUserType() { return userType; }
     public void setUserType(UserType userType) { this.userType = userType; }
     
+    public String getPassword() { return password; }
+    public void setPassword(String password) { this.password = password; }
+
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
 }
