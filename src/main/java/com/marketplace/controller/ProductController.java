@@ -1,66 +1,49 @@
 package com.marketplace.controller;
 
-import com.marketplace.model.Product;
-import com.marketplace.repository.ProductRepository;
+import com.marketplace.dto.ProductDTO;
+import com.marketplace.service.ProductService;
 import jakarta.validation.Valid;
-import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/products")
 public class ProductController {
 
-    private final ProductRepository productRepository;
+    private final ProductService productService;
 
-    public ProductController(ProductRepository productRepository) {
-        this.productRepository = productRepository;
+    public ProductController(ProductService productService) {
+        this.productService = productService;
     }
 
     @GetMapping
-    public List<Product> getAll() {
-        return productRepository.findAll();
+    public Page<ProductDTO> getAll(
+            @PageableDefault(size = 20, sort = "id") Pageable pageable) {
+        return productService.findAll(pageable);
     }
 
     @GetMapping("/{id}")
-    public Product getById(@PathVariable Long id) {
-        return productRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+    public ProductDTO getById(@PathVariable Long id) {
+        return productService.findById(id);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Product create(@Valid @RequestBody Product product) {
-        return productRepository.save(product);
+    public ProductDTO create(@Valid @RequestBody ProductDTO dto) {
+        return productService.create(dto);
     }
 
     @PutMapping("/{id}")
-    public Product update(@PathVariable Long id, @Valid @RequestBody Product body) {
-        Product p = productRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-
-        // ✅ CORRECTION : Utilise les nouveaux attributs
-        p.setName(body.getName());
-        p.setPriceMin(body.getPriceMin());
-        p.setPriceMax(body.getPriceMax());
-        p.setCategory(body.getCategory());
-        p.setBrand(body.getBrand());
-        p.setStockQuantity(body.getStockQuantity());
-
-        return productRepository.save(p);
+    public ProductDTO update(@PathVariable Long id, @Valid @RequestBody ProductDTO dto) {
+        return productService.update(id, dto);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Long id) {
-        try {
-            productRepository.deleteById(id);
-        } catch (EmptyResultDataAccessException e) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
-        }
+        productService.delete(id);
     }
 }
-

@@ -26,7 +26,7 @@ public class User {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt = LocalDateTime.now();
     
-    // ✅ SUPPRESSION de @OneToMany agents (on créera Agent plus tard)
+    //  SUPPRESSION de @OneToMany agents (on créera Agent plus tard)
     
     // Constructeurs
     public User() {}
