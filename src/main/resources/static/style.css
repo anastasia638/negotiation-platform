@@ -1468,3 +1468,199 @@ tr:hover td { background: rgba(255,255,255,0.018); }
   .form-row { grid-template-columns: 1fr; }
   .footer-inner { flex-direction: column; align-items: flex-start; }
 }
+
+/* ================================================================
+   ENHANCEMENTS — Cursor · Preloader · Transitions · Counters
+   ================================================================ */
+
+/* ==================== CUSTOM CURSOR ==================== */
+*, *:hover { cursor: none !important; }
+
+#cursor-dot {
+  position: fixed;
+  width: 5px;
+  height: 5px;
+  background: var(--crimson);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 99999;
+  left: 0; top: 0;
+  transform: translate(-50%, -50%);
+  transition: width 0.25s var(--ease), height 0.25s var(--ease), background 0.25s;
+  will-change: transform;
+}
+
+#cursor-ring {
+  position: fixed;
+  width: 34px;
+  height: 34px;
+  border: 1px solid rgba(196,18,48,0.6);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 99998;
+  left: 0; top: 0;
+  transform: translate(-50%, -50%);
+  transition: width 0.4s var(--ease), height 0.4s var(--ease),
+              border-color 0.4s, opacity 0.3s, background 0.3s;
+  will-change: transform;
+  mix-blend-mode: difference;
+}
+
+/* Hover interactive elements → ring expands, gold */
+body.cur-hover #cursor-dot {
+  width: 8px;
+  height: 8px;
+  background: var(--gold);
+}
+
+body.cur-hover #cursor-ring {
+  width: 54px;
+  height: 54px;
+  border-color: rgba(201,168,76,0.5);
+}
+
+/* Click state */
+body.cur-click #cursor-dot {
+  width: 3px;
+  height: 3px;
+}
+
+body.cur-click #cursor-ring {
+  width: 24px;
+  height: 24px;
+  background: rgba(196,18,48,0.08);
+}
+
+/* ==================== PRELOADER ==================== */
+#preloader {
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  z-index: 99990;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.9s var(--ease), visibility 0.9s;
+}
+
+#preloader.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.preloader-inner {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.preloader-diamond {
+  color: var(--crimson);
+  font-size: 22px;
+  animation: preloader-pulse 1.2s ease-in-out infinite;
+  margin-bottom: 8px;
+}
+
+@keyframes preloader-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.4; transform: scale(0.8); }
+}
+
+.preloader-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.preloader-line1 {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 300;
+  font-size: clamp(48px, 8vw, 80px);
+  color: var(--white);
+  letter-spacing: -0.02em;
+  line-height: 1;
+  display: block;
+  min-height: 1em;
+}
+
+.preloader-line2 {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 300;
+  font-size: clamp(48px, 8vw, 80px);
+  color: var(--crimson);
+  letter-spacing: -0.02em;
+  line-height: 1;
+  display: block;
+  min-height: 1em;
+}
+
+/* Blinking cursor during typing */
+.preloader-line1::after,
+.preloader-line2::after {
+  content: '|';
+  animation: cursor-blink 0.6s step-end infinite;
+  margin-left: 2px;
+  color: var(--crimson);
+  font-style: normal;
+}
+
+@keyframes cursor-blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+
+.preloader-bar {
+  width: 120px;
+  height: 1px;
+  background: rgba(255,255,255,0.08);
+  margin-top: 12px;
+  overflow: hidden;
+}
+
+.preloader-bar-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(to right, var(--crimson), var(--gold));
+  transition: width 0.1s linear;
+}
+
+/* ==================== PAGE TRANSITION ==================== */
+#page-transition {
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  z-index: 8000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s var(--ease);
+}
+
+#page-transition.active {
+  opacity: 1;
+  pointer-events: all;
+}
+
+/* ==================== COUNTER ANIMATION ==================== */
+.stat-value[data-counter] {
+  transition: color 0.3s;
+}
+
+/* Highlight flash when counter finishes */
+@keyframes counter-done {
+  0%   { color: var(--gold); }
+  100% { color: inherit; }
+}
+
+.counter-flash { animation: counter-done 0.6s var(--ease) forwards; }
+
+/* ==================== MAGNETIC BUTTON WRAPPER ==================== */
+.btn {
+  transform: translate(0, 0);
+  transition: all 0.35s var(--ease), transform 0.15s var(--ease) !important;
+}

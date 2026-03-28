@@ -238,7 +238,11 @@ function navigate(page, params = {}) {
   const fn = pages[page];
   if (fn) {
     Promise.resolve(fn(params)).finally(() => {
-      setTimeout(() => { initScrollReveal(); initTilt(); }, 80);
+      setTimeout(() => {
+        initScrollReveal();
+        initTilt();
+        initCounters();
+      }, 80);
     });
   } else {
     app.innerHTML = '<div class="page"><h1>Page non trouvée</h1></div>';
@@ -1469,6 +1473,162 @@ async function renderAdmin() {
   }
 }
 
+// ==================== CUSTOM CURSOR ====================
+function initCursor() {
+  const dot  = document.getElementById('cursor-dot');
+  const ring = document.getElementById('cursor-ring');
+  if (!dot || !ring) return;
+
+  let mx = window.innerWidth / 2, my = window.innerHeight / 2;
+  let rx = mx, ry = my;
+
+  // Move dot instantly
+  document.addEventListener('mousemove', e => {
+    mx = e.clientX; my = e.clientY;
+    dot.style.left = mx + 'px';
+    dot.style.top  = my + 'px';
+  });
+
+  // Ring follows with lag (lerp)
+  (function animateRing() {
+    rx += (mx - rx) * 0.11;
+    ry += (my - ry) * 0.11;
+    ring.style.left = rx + 'px';
+    ring.style.top  = ry + 'px';
+    requestAnimationFrame(animateRing);
+  })();
+
+  // Hover on interactive elements
+  document.addEventListener('mouseover', e => {
+    if (e.target.closest('a,button,[onclick],.agent-card,.product-card,.protocol-card,.chip,.tab-btn')) {
+      document.body.classList.add('cur-hover');
+    }
+  });
+  document.addEventListener('mouseout', e => {
+    if (e.target.closest('a,button,[onclick],.agent-card,.product-card,.protocol-card,.chip,.tab-btn')) {
+      document.body.classList.remove('cur-hover');
+    }
+  });
+
+  // Click ripple
+  document.addEventListener('mousedown', () => document.body.classList.add('cur-click'));
+  document.addEventListener('mouseup',   () => document.body.classList.remove('cur-click'));
+
+  // Hide ring when leaving window
+  document.addEventListener('mouseleave', () => { dot.style.opacity = '0'; ring.style.opacity = '0'; });
+  document.addEventListener('mouseenter', () => { dot.style.opacity = '1'; ring.style.opacity = '1'; });
+}
+
+// ==================== PRELOADER ====================
+function initPreloader(onDone) {
+  const pl   = document.getElementById('preloader');
+  const el1  = document.getElementById('pl-line1');
+  const el2  = document.getElementById('pl-line2');
+  const bar  = document.getElementById('pl-bar');
+  if (!pl || !el1 || !el2) { onDone(); return; }
+
+  const word1 = 'Couture';
+  const word2 = 'Marketplace';
+  const totalChars = word1.length + word2.length;
+  let typed = 0;
+
+  function updateBar() {
+    typed++;
+    if (bar) bar.style.width = Math.round((typed / totalChars) * 100) + '%';
+  }
+
+  function type(el, text, speed, cb) {
+    let i = 0;
+    function step() {
+      if (i < text.length) {
+        el.textContent += text[i++];
+        updateBar();
+        setTimeout(step, speed + Math.random() * 30);
+      } else if (cb) cb();
+    }
+    step();
+  }
+
+  // Start typing after a brief pause
+  setTimeout(() => {
+    type(el1, word1, 75, () => {
+      setTimeout(() => {
+        type(el2, word2, 60, () => {
+          // Remove blinking cursor from line1 after done
+          el1.style.setProperty('--cur', 'none');
+          setTimeout(() => {
+            pl.classList.add('hidden');
+            setTimeout(onDone, 900);
+          }, 700);
+        });
+      }, 180);
+    });
+  }, 200);
+}
+
+// ==================== PAGE TRANSITION ====================
+let _transitioning = false;
+
+async function pageTransition(callback) {
+  if (_transitioning) return;
+  _transitioning = true;
+
+  const overlay = document.getElementById('page-transition');
+  if (!overlay) { callback(); _transitioning = false; return; }
+
+  overlay.classList.add('active');
+  await new Promise(r => setTimeout(r, 300));
+
+  callback();
+
+  await new Promise(r => setTimeout(r, 60));
+  overlay.classList.remove('active');
+  _transitioning = false;
+}
+
+// ==================== COUNTER ANIMATION ====================
+function animateCounter(el) {
+  const raw = el.textContent.trim();
+  const hasEuro = raw.includes('€') || raw.includes('€');
+  const num = parseInt(raw.replace(/[^\d]/g, ''));
+  if (!num || num < 10) return; // skip tiny numbers
+
+  const duration = 1400;
+  const start = performance.now();
+
+  function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
+
+  function tick(now) {
+    const progress = Math.min((now - start) / duration, 1);
+    const eased    = easeOutCubic(progress);
+    const current  = Math.round(num * eased);
+    el.textContent = current.toLocaleString('fr-FR') + (hasEuro ? ' €' : '');
+    if (progress < 1) {
+      requestAnimationFrame(tick);
+    } else {
+      el.textContent = raw; // restore original formatted value
+      el.classList.add('counter-flash');
+    }
+  }
+
+  el.textContent = '0';
+  requestAnimationFrame(tick);
+}
+
+function initCounters() {
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const el = entry.target;
+        animateCounter(el);
+        observer.unobserve(el);
+      }
+    });
+  }, { threshold: 0.6 });
+
+  document.querySelectorAll('.stat-value').forEach(el => observer.observe(el));
+}
+
 // ==================== ANIMATIONS & EFFECTS ====================
 
 function initScrollReveal() {
@@ -1532,21 +1692,29 @@ function resetAppPadding() {
 // ==================== INIT ====================
 window.navigate = navigate;
 
-// Patch navigate to reset padding on non-accueil pages
+// Patch navigate: add page transition + cleanup
 const _origNavigate = navigate;
 window.navigate = function(page, params) {
-  if (page !== 'accueil') resetAppPadding();
   // Clear hero interval if exists
   const app = document.getElementById('app');
   if (app && app._heroInterval) {
     clearInterval(app._heroInterval);
     app._heroInterval = null;
   }
-  _origNavigate(page, params);
+  if (page !== 'accueil') resetAppPadding();
+
+  pageTransition(() => _origNavigate(page, params));
 };
 
 document.addEventListener('DOMContentLoaded', () => {
-  updateNavAgent();
-  initScrollProgress();
-  window.navigate('accueil');
+  // Init cursor immediately (no waiting)
+  initCursor();
+
+  // Launch preloader, then boot the app
+  initPreloader(() => {
+    updateNavAgent();
+    initScrollProgress();
+    _origNavigate('accueil'); // bypass transition on first load
+    setTimeout(() => { initScrollReveal(); initTilt(); initCounters(); }, 400);
+  });
 });
