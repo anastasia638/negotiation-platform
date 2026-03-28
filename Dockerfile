@@ -1,7 +1,7 @@
 # =====================================================
 # STAGE 1 — Build (Maven + JDK)
 # =====================================================
-FROM eclipse-temurin:17-jdk-alpine AS builder
+FROM maven:3.9-eclipse-temurin-17 AS builder
 
 WORKDIR /app
 
@@ -18,12 +18,12 @@ RUN --mount=type=cache,target=/root/.m2 \
 # =====================================================
 # STAGE 2 — Run (JRE uniquement, image légère)
 # =====================================================
-FROM eclipse-temurin:17-jre-alpine AS runtime
+FROM eclipse-temurin:17-jre-jammy AS runtime
 
 WORKDIR /app
 
 # Utilisateur non-root pour la sécurité
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+RUN groupadd -r appgroup && useradd -r -g appgroup appuser
 USER appuser
 
 # Copier uniquement le JAR depuis le stage builder
