@@ -7,17 +7,56 @@
 const API = '';   // même origine → pas de CORS
 
 const AGENT_PROFILES = [
-  { strategy: 'Adaptatif',    strategyKey: 'COOL_HEADED', budget: 257500, color: '#22c55e' },
-  { strategy: 'Agressif',     strategyKey: 'GREEDY',      budget: 312500, color: '#ef4444' },
-  { strategy: 'Conservateur', strategyKey: 'FRUGAL',      budget: 255000, color: '#3b82f6' },
-  { strategy: 'Adaptatif',    strategyKey: 'COOL_HEADED', budget: 335000, color: '#22c55e' },
-  { strategy: 'Adaptatif',    strategyKey: 'COOL_HEADED', budget: 285000, color: '#22c55e' },
+  { strategy: 'Adaptatif',    strategyKey: 'COOL_HEADED', budget: 257500, color: '#C41230' },
+  { strategy: 'Agressif',     strategyKey: 'GREEDY',      budget: 312500, color: '#E8203E' },
+  { strategy: 'Conservateur', strategyKey: 'FRUGAL',      budget: 255000, color: '#888888' },
+  { strategy: 'Adaptatif',    strategyKey: 'COOL_HEADED', budget: 335000, color: '#C41230' },
+  { strategy: 'Adaptatif',    strategyKey: 'COOL_HEADED', budget: 285000, color: '#C9A84C' },
 ];
 
 const CATEGORY_EMOJI = {
   bags: '👜', watches: '⌚', clothing: '👗',
   perfumes: '🌹', shoes: '👠', default: '💎'
 };
+
+// ==================== PRODUCT IMAGES (Unsplash) ====================
+const PRODUCT_IMAGES = {
+  'Chanel Classic Flap Vintage':       'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=600&q=85',
+  'Louis Vuitton Neverfull MM':        'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=600&q=85',
+  'Hermès Birkin 30':                  'https://images.unsplash.com/photo-1591561954557-26941169b49e?w=600&q=85',
+  'Prada Re-Edition 2000':             'https://images.unsplash.com/photo-1614179689702-355944cd0918?w=600&q=85',
+  'Balenciaga City Bag':               'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=600&q=85',
+  'Rolex Datejust 36':                 'https://images.unsplash.com/photo-1523170335258-f5ed11844a49?w=600&q=85',
+  'Cartier Tank Française':            'https://images.unsplash.com/photo-1587836374828-4dbafa94cf0e?w=600&q=85',
+  'Hermès Cape Cod Watch':             'https://images.unsplash.com/photo-1612817288484-6f916006741a?w=600&q=85',
+  'Dior Bar Jacket':                   'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=600&q=85',
+  'Gucci Silk Maxi Dress':             'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?w=600&q=85',
+  'Chanel No.5 Parfum 100ml':          'https://images.unsplash.com/photo-1541643600914-78b084683702?w=600&q=85',
+  'Christian Louboutin Pigalle 120':   'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=600&q=85',
+};
+
+const CATEGORY_IMAGES = {
+  bags:     'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=600&q=85',
+  watches:  'https://images.unsplash.com/photo-1523170335258-f5ed11844a49?w=600&q=85',
+  clothing: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=600&q=85',
+  perfumes: 'https://images.unsplash.com/photo-1541643600914-78b084683702?w=600&q=85',
+  shoes:    'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=600&q=85',
+  default:  'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=600&q=85',
+};
+
+// Hero background images (luxury fashion slideshow)
+const HERO_IMAGES = [
+  'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=1920&q=90',  // fashion model dark
+  'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=1920&q=90',     // Chanel bag
+  'https://images.unsplash.com/photo-1523170335258-f5ed11844a49?w=1920&q=90',  // luxury watch
+  'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1920&q=90',  // runway fashion
+];
+
+function getProductImage(product) {
+  return PRODUCT_IMAGES[product.name]
+    || CATEGORY_IMAGES[product.category]
+    || CATEGORY_IMAGES.default;
+}
 
 const CONDITIONS = ['Excellent', 'Très bon', 'Bon'];
 
@@ -191,8 +230,13 @@ function navigate(page, params = {}) {
   };
 
   const fn = pages[page];
-  if (fn) fn(params);
-  else app.innerHTML = '<div class="page"><h1>Page non trouvée</h1></div>';
+  if (fn) {
+    Promise.resolve(fn(params)).finally(() => {
+      setTimeout(() => { initScrollReveal(); initTilt(); }, 80);
+    });
+  } else {
+    app.innerHTML = '<div class="page"><h1>Page non trouvée</h1></div>';
+  }
 }
 
 // ==================== NAVBAR ====================
@@ -215,6 +259,8 @@ document.addEventListener('click', e => {
 async function renderAccueil() {
   setPage('accueil');
   const app = document.getElementById('app');
+  // Remove top padding for hero
+  app.style.paddingTop = '0';
 
   try {
     const users = await apiGetUsers();
@@ -227,30 +273,20 @@ async function renderAccueil() {
       const initial = u.name.charAt(0).toUpperCase();
       const solde = Math.round(profile.budget * (0.75 + Math.random() * 0.25));
       return `
-        <div class="agent-card ${isActive ? 'active' : ''}" onclick="selectAgent(${u.id}, '${u.name}', '${u.email}', '${profile.strategy}', '${profile.strategyKey}', ${profile.budget})">
+        <div class="agent-card fade-up stagger-${Math.min(i+1,5)} ${isActive ? 'active' : ''}" data-tilt
+          onclick="selectAgent(${u.id}, '${u.name}', '${u.email}', '${profile.strategy}', '${profile.strategyKey}', ${profile.budget})">
           ${isActive ? '<span class="agent-badge badge-actif">Actif</span>' : '<span class="agent-badge badge-libre">Libre</span>'}
           <div class="agent-card-header">
-            <div class="agent-avatar" style="background: linear-gradient(135deg, ${profile.color}, #333)">${initial}</div>
+            <div class="agent-avatar" style="background:${profile.color}">${initial}</div>
             <div>
               <div class="agent-name">${u.name}</div>
-              <div class="agent-id">ID: buyer_${u.id}</div>
+              <div class="agent-id">ID · buyer_${u.id}</div>
             </div>
           </div>
-          <div class="agent-row">
-            <span class="agent-row-label">Stratégie</span>
-            <span class="agent-row-value">${profile.strategy}</span>
-          </div>
-          <div class="agent-row">
-            <span class="agent-row-label">Budget max</span>
-            <span class="agent-row-value">${fmt(profile.budget)}</span>
-          </div>
-          <div class="agent-row">
-            <span class="agent-row-label">Solde actuel</span>
-            <span style="color: var(--text)">${fmt(solde)}</span>
-          </div>
-          <div class="budget-bar">
-            <div class="budget-bar-fill" style="width:${Math.round((solde/profile.budget)*100)}%"></div>
-          </div>
+          <div class="agent-row"><span class="agent-row-label">Stratégie</span><span class="agent-row-value">${profile.strategy}</span></div>
+          <div class="agent-row"><span class="agent-row-label">Budget</span><span class="agent-row-value">${fmt(profile.budget)}</span></div>
+          <div class="agent-row"><span class="agent-row-label">Solde</span><span style="color:var(--gold)">${fmt(solde)}</span></div>
+          <div class="budget-bar"><div class="budget-bar-fill" style="width:${Math.round((solde/profile.budget)*100)}%"></div></div>
         </div>`;
     }).join('');
 
@@ -258,61 +294,119 @@ async function renderAccueil() {
       const isActive = S.activeAgent && S.activeAgent.email === a.email;
       const solde = Math.round(a.budget * 0.9);
       return `
-        <div class="agent-card ${isActive ? 'active' : ''}" onclick="selectCustomAgent(${i})">
+        <div class="agent-card fade-up ${isActive ? 'active' : ''}" data-tilt onclick="selectCustomAgent(${i})">
           ${isActive ? '<span class="agent-badge badge-actif">Actif</span>' : '<span class="agent-badge" style="background:var(--gold);color:#000">Custom</span>'}
           <div class="agent-card-header">
-            <div class="agent-avatar" style="background:linear-gradient(135deg,#a855f7,#333)">${a.name.charAt(0).toUpperCase()}</div>
-            <div>
-              <div class="agent-name">${a.name}</div>
-              <div class="agent-id">Agent personnalisé</div>
-            </div>
+            <div class="agent-avatar" style="background:var(--grey2)">${a.name.charAt(0).toUpperCase()}</div>
+            <div><div class="agent-name">${a.name}</div><div class="agent-id">Agent personnalisé</div></div>
           </div>
           <div class="agent-row"><span class="agent-row-label">Stratégie</span><span class="agent-row-value">${a.strategy}</span></div>
-          <div class="agent-row"><span class="agent-row-label">Budget max</span><span class="agent-row-value">${fmt(a.budget)}</span></div>
-          <div class="agent-row"><span class="agent-row-label">Solde actuel</span><span>${fmt(solde)}</span></div>
+          <div class="agent-row"><span class="agent-row-label">Budget</span><span class="agent-row-value">${fmt(a.budget)}</span></div>
+          <div class="agent-row"><span class="agent-row-label">Solde</span><span style="color:var(--gold)">${fmt(solde)}</span></div>
           <div class="budget-bar"><div class="budget-bar-fill" style="width:90%"></div></div>
         </div>`;
     }).join('');
 
-    app.innerHTML = `
-      <div class="page">
-        <div class="page-header">
-          <h1>◆ Sélectionner votre agent</h1>
-          <p>Choisissez un agent acheteur pour commencer à négocier</p>
-        </div>
+    // Build hero slides HTML
+    const slidesHtml = HERO_IMAGES.map((src, i) =>
+      `<div class="hero-slide ${i===0?'visible':''}" style="background-image:url('${src}')"></div>`
+    ).join('');
+    const dotsHtml = HERO_IMAGES.map((_, i) =>
+      `<div class="hero-dot ${i===0?'active':''}" onclick="heroGoTo(${i})"></div>`
+    ).join('');
 
-        <div class="grid grid-3">${(agentCards + customCards) || '<div class="empty-state"><div class="empty-icon">👤</div><p>Aucun agent disponible</p></div>'}</div>
+    app.innerHTML = `
+      <!-- HERO CINÉMATIQUE -->
+      <section class="hero">
+        <div class="hero-bg" id="hero-bg">${slidesHtml}</div>
+        <div class="hero-overlay"></div>
+        <div class="hero-content">
+          <div class="hero-label">Marketplace · Intelligence Artificielle · Luxe</div>
+          <h1 class="hero-title">SA7</h1>
+          <p class="hero-sub">Luxury Agents — Négociation Automatique</p>
+          <div class="hero-actions">
+            <button class="btn btn-primary btn-lg" onclick="document.getElementById('agents-section').scrollIntoView({behavior:'smooth'})">Choisir un agent</button>
+            <button class="btn btn-outline btn-lg" onclick="navigate('marketplace')">Explorer le Marketplace</button>
+          </div>
+        </div>
+        <div class="hero-dots" id="hero-dots">${dotsHtml}</div>
+        <div class="hero-scroll">
+          <span>Défiler</span>
+          <div class="hero-scroll-line"></div>
+        </div>
+      </section>
+
+      <!-- TICKER -->
+      <div class="ticker">
+        <div class="ticker-inner">
+          <span class="ticker-text">SA7 Luxury Agents &nbsp;•&nbsp; Négociation Automatique &nbsp;•&nbsp; Marché Centralisé &nbsp;•&nbsp; Marché Décentralisé &nbsp;•&nbsp; Achat Groupé &nbsp;•&nbsp; Enchère Double &nbsp;•&nbsp; Protocole Alternating-Offer &nbsp;•&nbsp; Chanel &nbsp;•&nbsp; Hermès &nbsp;•&nbsp; Rolex &nbsp;•&nbsp; Dior &nbsp;•&nbsp; Louis Vuitton &nbsp;•&nbsp;</span>
+          <span class="ticker-text">SA7 Luxury Agents &nbsp;•&nbsp; Négociation Automatique &nbsp;•&nbsp; Marché Centralisé &nbsp;•&nbsp; Marché Décentralisé &nbsp;•&nbsp; Achat Groupé &nbsp;•&nbsp; Enchère Double &nbsp;•&nbsp; Protocole Alternating-Offer &nbsp;•&nbsp; Chanel &nbsp;•&nbsp; Hermès &nbsp;•&nbsp; Rolex &nbsp;•&nbsp; Dior &nbsp;•&nbsp; Louis Vuitton &nbsp;•&nbsp;</span>
+        </div>
+      </div>
+
+      <!-- AGENTS -->
+      <div class="page" id="agents-section">
+        <div class="page-header">
+          <div class="section-label">Agents Acheteurs</div>
+          <h1>Sélectionnez votre agent</h1>
+          <p>Choisissez un agent — connexion automatique via JWT</p>
+        </div>
+        <div class="grid grid-3">${(agentCards + customCards) || '<div class="empty-state"><p>Aucun agent disponible</p></div>'}</div>
 
         <div class="protocol-section">
-          <h2>Choisissez un protocole de négociation</h2>
+          <div class="section-label">Protocoles</div>
+          <h2>Choisissez votre marché</h2>
           <div class="protocol-cards">
-            <div class="protocol-card" onclick="navigate('marche-decentralise')">
-              <div class="protocol-icon">🔀</div>
+            <div class="protocol-card fade-up stagger-1" onclick="navigate('marche-decentralise')">
+              <span class="protocol-icon">🔀</span>
               <div class="protocol-name">Marché Décentralisé</div>
-              <div class="protocol-desc">1 Acheteur négocie avec plusieurs vendeurs simultanément via protocole Alternating-Offer.</div>
+              <div class="protocol-desc">1 Acheteur négocie avec plusieurs vendeurs simultanément via Alternating-Offer.</div>
               <div class="protocol-cta">→ Accéder</div>
             </div>
-            <div class="protocol-card" onclick="navigate('marche-centralise')">
-              <div class="protocol-icon">🏛</div>
+            <div class="protocol-card fade-up stagger-2" onclick="navigate('marche-centralise')">
+              <span class="protocol-icon">🏛</span>
               <div class="protocol-name">Marché Centralisé</div>
-              <div class="protocol-desc">Enchère double avec plusieurs acheteurs et vendeurs. Matching optimal par round.</div>
+              <div class="protocol-desc">Enchère double multi-rounds avec matching optimal acheteurs/vendeurs.</div>
               <div class="protocol-cta">→ Accéder</div>
             </div>
-            <div class="protocol-card" onclick="navigate('achat-groupe')">
-              <div class="protocol-icon">👥</div>
+            <div class="protocol-card fade-up stagger-3" onclick="navigate('achat-groupe')">
+              <span class="protocol-icon">👥</span>
               <div class="protocol-name">Achat Groupé</div>
-              <div class="protocol-desc">Plusieurs acheteurs s'unissent pour négocier un meilleur prix collectif.</div>
+              <div class="protocol-desc">Coalition d'acheteurs pour négocier un prix collectif avantageux.</div>
               <div class="protocol-cta">→ Accéder</div>
             </div>
-            <div class="protocol-card" onclick="navigate('marketplace')">
-              <div class="protocol-icon">🛍</div>
+            <div class="protocol-card fade-up stagger-4" onclick="navigate('marketplace')">
+              <span class="protocol-icon">💎</span>
               <div class="protocol-name">Négociation 1v1</div>
-              <div class="protocol-desc">Sélectionnez un produit dans la marketplace et négociez directement avec un vendeur.</div>
+              <div class="protocol-desc">Sélectionnez un article et négociez directement avec le vendeur.</div>
               <div class="protocol-cta">→ Accéder</div>
             </div>
           </div>
         </div>
       </div>`;
+
+    // Hero slideshow
+    let currentSlide = 0;
+    const slides = document.querySelectorAll('.hero-slide');
+    const dots   = document.querySelectorAll('.hero-dot');
+
+    window.heroGoTo = (n) => {
+      slides[currentSlide].classList.remove('visible');
+      dots[currentSlide].classList.remove('active');
+      currentSlide = (n + slides.length) % slides.length;
+      slides[currentSlide].classList.add('visible');
+      dots[currentSlide].classList.add('active');
+    };
+
+    const heroInterval = setInterval(() => heroGoTo(currentSlide + 1), 5000);
+    // Clear interval when navigating away
+    app._heroInterval = heroInterval;
+
+    // Scroll animations
+    initScrollReveal();
+    // 3D tilt
+    initTilt();
+
   } catch(e) {
     app.innerHTML = `<div class="page"><div class="empty-state"><div class="empty-icon">⚠️</div><p>Impossible de charger les agents.<br><small>${e.message}</small></p></div></div>`;
   }
@@ -378,29 +472,35 @@ async function renderMarketplace() {
 
     function productGrid(list) {
       if (!list.length) return '<div class="empty-state"><div class="empty-icon">🔍</div><p>Aucun produit trouvé</p></div>';
-      return `<div class="grid grid-3">${list.map(p => {
-        const emoji = categoryEmoji(p.category);
-        const cond  = conditionBadge(p.id);
+      return `<div class="grid grid-3">${list.map((p, i) => {
+        const imgSrc = getProductImage(p);
+        const cond   = conditionBadge(p.id);
         return `
-          <div class="product-card" onclick="navigate('marche-decentralise', {productId: ${p.id}})">
-            <div class="product-img">${emoji}</div>
+          <div class="product-card fade-up stagger-${Math.min((i%5)+1,5)}" data-tilt
+               onclick="navigate('marche-decentralise', {productId: ${p.id}})">
+            <div class="product-img">
+              <img src="${imgSrc}" alt="${p.name}"
+                   onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+              <div class="product-img-placeholder" style="display:none">${categoryEmoji(p.category)}</div>
+              <div class="product-img-overlay"></div>
+            </div>
             <div class="product-body">
               <div class="product-brand">${p.brand || p.category || '—'}</div>
               <div class="product-name">${p.name}</div>
-              <div class="product-seller">Vendeur : ${p.sellerName || '—'} &nbsp; ${cond}</div>
+              <div class="product-seller">Par ${p.sellerName || '—'} &nbsp; ${cond}</div>
               <div class="product-prices">
                 <div class="price-block">
-                  <label>Prix min</label>
+                  <label>Min</label>
                   <div class="price">${fmt(p.priceMin)}</div>
                 </div>
                 <div class="price-block">
-                  <label>Prix max</label>
+                  <label>Max</label>
                   <div class="price gold">${fmt(p.priceMax)}</div>
                 </div>
               </div>
             </div>
             <div class="product-footer">
-              <span>Stock: ${p.stockQuantity ?? '—'}</span>
+              <span>Stock : ${p.stockQuantity ?? '—'}</span>
               <span class="tag">${p.category || '—'}</span>
             </div>
           </div>`;
@@ -1363,10 +1463,60 @@ async function renderAdmin() {
   }
 }
 
+// ==================== ANIMATIONS & EFFECTS ====================
+
+function initScrollReveal() {
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+  document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+}
+
+function initTilt() {
+  document.querySelectorAll('[data-tilt]').forEach(el => {
+    el.addEventListener('mousemove', e => {
+      const rect = el.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / rect.width  - 0.5;
+      const y = (e.clientY - rect.top)  / rect.height - 0.5;
+      el.style.transform = `perspective(800px) rotateX(${-y * 8}deg) rotateY(${x * 8}deg) scale(1.02)`;
+      el.style.transition = 'transform 0.1s ease';
+    });
+    el.addEventListener('mouseleave', () => {
+      el.style.transform = 'perspective(800px) rotateX(0) rotateY(0) scale(1)';
+      el.style.transition = 'transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+    });
+  });
+}
+
+// Reset app padding when navigating away from hero page
+function resetAppPadding() {
+  const app = document.getElementById('app');
+  if (app) app.style.paddingTop = '';
+}
+
 // ==================== INIT ====================
 window.navigate = navigate;
 
+// Patch navigate to reset padding on non-accueil pages
+const _origNavigate = navigate;
+window.navigate = function(page, params) {
+  if (page !== 'accueil') resetAppPadding();
+  // Clear hero interval if exists
+  const app = document.getElementById('app');
+  if (app && app._heroInterval) {
+    clearInterval(app._heroInterval);
+    app._heroInterval = null;
+  }
+  _origNavigate(page, params);
+};
+
 document.addEventListener('DOMContentLoaded', () => {
   updateNavAgent();
-  navigate('accueil');
+  window.navigate('accueil');
 });
