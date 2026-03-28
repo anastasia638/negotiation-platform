@@ -20,36 +20,42 @@ const CATEGORY_EMOJI = {
 };
 
 // ==================== PRODUCT IMAGES (Unsplash) ====================
+// Photos choisies pour correspondre exactement à chaque produit
 const PRODUCT_IMAGES = {
-  'Chanel Classic Flap Vintage':       'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=600&q=85',
-  'Louis Vuitton Neverfull MM':        'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=600&q=85',
-  'Hermès Birkin 30':                  'https://images.unsplash.com/photo-1591561954557-26941169b49e?w=600&q=85',
-  'Prada Re-Edition 2000':             'https://images.unsplash.com/photo-1614179689702-355944cd0918?w=600&q=85',
-  'Balenciaga City Bag':               'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=600&q=85',
-  'Rolex Datejust 36':                 'https://images.unsplash.com/photo-1523170335258-f5ed11844a49?w=600&q=85',
-  'Cartier Tank Française':            'https://images.unsplash.com/photo-1587836374828-4dbafa94cf0e?w=600&q=85',
-  'Hermès Cape Cod Watch':             'https://images.unsplash.com/photo-1612817288484-6f916006741a?w=600&q=85',
-  'Dior Bar Jacket':                   'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=600&q=85',
-  'Gucci Silk Maxi Dress':             'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?w=600&q=85',
-  'Chanel No.5 Parfum 100ml':          'https://images.unsplash.com/photo-1541643600914-78b084683702?w=600&q=85',
-  'Christian Louboutin Pigalle 120':   'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=600&q=85',
+  // Sacs
+  'Chanel Classic Flap Vintage':     'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=600&q=85', // Chanel quilted black bag
+  'Louis Vuitton Neverfull MM':      'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=600&q=85', // LV monogram tote
+  'Hermès Birkin 30':                'https://images.unsplash.com/photo-1601924638867-3d8e59a9a694?w=600&q=85', // Hermès orange/tan leather
+  'Prada Re-Edition 2000':           'https://images.unsplash.com/photo-1566150905458-1bf1fc113f0d?w=600&q=85', // nylon mini bag
+  'Balenciaga City Bag':             'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=600&q=85', // dark leather city bag
+  // Montres
+  'Rolex Datejust 36':               'https://images.unsplash.com/photo-1523170335258-f5ed11844a49?w=600&q=85', // silver Rolex datejust
+  'Cartier Tank Française':          'https://images.unsplash.com/photo-1587836374828-4dbafa94cf0e?w=600&q=85', // rectangular Cartier
+  'Hermès Cape Cod Watch':           'https://images.unsplash.com/photo-1547996160-81dfa63595aa?w=600&q=85', // square luxury watch
+  // Vêtements
+  'Dior Bar Jacket':                 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=600&q=85', // couture jacket editorial
+  'Gucci Silk Maxi Dress':           'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?w=600&q=85', // silk long dress editorial
+  // Parfum
+  'Chanel No.5 Parfum 100ml':        'https://images.unsplash.com/photo-1588776813677-77aaf5595b83?w=600&q=85', // flacon Chanel No.5
+  // Chaussures
+  'Christian Louboutin Pigalle 120': 'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=600&q=85', // red sole stilettos
 };
 
 const CATEGORY_IMAGES = {
   bags:     'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=600&q=85',
   watches:  'https://images.unsplash.com/photo-1523170335258-f5ed11844a49?w=600&q=85',
   clothing: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=600&q=85',
-  perfumes: 'https://images.unsplash.com/photo-1541643600914-78b084683702?w=600&q=85',
+  perfumes: 'https://images.unsplash.com/photo-1588776813677-77aaf5595b83?w=600&q=85',
   shoes:    'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=600&q=85',
-  default:  'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=600&q=85',
+  default:  'https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=600&q=85',
 };
 
-// Hero background images (luxury fashion slideshow)
+// Hero background images — dark editorial, palette noir/rouge/or
 const HERO_IMAGES = [
-  'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=1920&q=90',  // fashion model dark
-  'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=1920&q=90',     // Chanel bag
-  'https://images.unsplash.com/photo-1523170335258-f5ed11844a49?w=1920&q=90',  // luxury watch
-  'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1920&q=90',  // runway fashion
+  'https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=1920&q=90',  // runway dark couture
+  'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=1920&q=90',  // editorial black
+  'https://images.unsplash.com/photo-1509631179647-0177331693ae?w=1920&q=90',  // fashion dark
+  'https://images.unsplash.com/photo-1536243298747-ea8874136d64?w=1920&q=90',  // luxury moody
 ];
 
 function getProductImage(product) {
@@ -321,12 +327,12 @@ async function renderAccueil() {
         <div class="hero-bg" id="hero-bg">${slidesHtml}</div>
         <div class="hero-overlay"></div>
         <div class="hero-content">
-          <div class="hero-label">Marketplace · Intelligence Artificielle · Luxe</div>
-          <h1 class="hero-title">SA7</h1>
-          <p class="hero-sub">Luxury Agents — Négociation Automatique</p>
+          <p class="hero-quote">Vos envies de luxe, nos agents s'occupent du prix.</p>
+          <h1 class="hero-title">Couture<br>Marketplace</h1>
+          <p class="hero-sub">Intelligence Artificielle · Négociation Automatique · Luxe</p>
           <div class="hero-actions">
             <button class="btn btn-primary btn-lg" onclick="document.getElementById('agents-section').scrollIntoView({behavior:'smooth'})">Choisir un agent</button>
-            <button class="btn btn-outline btn-lg" onclick="navigate('marketplace')">Explorer le Marketplace</button>
+            <button class="btn btn-outline btn-lg" onclick="navigate('marketplace')">Explorer</button>
           </div>
         </div>
         <div class="hero-dots" id="hero-dots">${dotsHtml}</div>
@@ -339,8 +345,8 @@ async function renderAccueil() {
       <!-- TICKER -->
       <div class="ticker">
         <div class="ticker-inner">
-          <span class="ticker-text">SA7 Luxury Agents &nbsp;•&nbsp; Négociation Automatique &nbsp;•&nbsp; Marché Centralisé &nbsp;•&nbsp; Marché Décentralisé &nbsp;•&nbsp; Achat Groupé &nbsp;•&nbsp; Enchère Double &nbsp;•&nbsp; Protocole Alternating-Offer &nbsp;•&nbsp; Chanel &nbsp;•&nbsp; Hermès &nbsp;•&nbsp; Rolex &nbsp;•&nbsp; Dior &nbsp;•&nbsp; Louis Vuitton &nbsp;•&nbsp;</span>
-          <span class="ticker-text">SA7 Luxury Agents &nbsp;•&nbsp; Négociation Automatique &nbsp;•&nbsp; Marché Centralisé &nbsp;•&nbsp; Marché Décentralisé &nbsp;•&nbsp; Achat Groupé &nbsp;•&nbsp; Enchère Double &nbsp;•&nbsp; Protocole Alternating-Offer &nbsp;•&nbsp; Chanel &nbsp;•&nbsp; Hermès &nbsp;•&nbsp; Rolex &nbsp;•&nbsp; Dior &nbsp;•&nbsp; Louis Vuitton &nbsp;•&nbsp;</span>
+          <span class="ticker-text">Couture Marketplace &nbsp;◆&nbsp; Vos envies de luxe, nos agents s'occupent du prix &nbsp;◆&nbsp; Chanel &nbsp;·&nbsp; Hermès &nbsp;·&nbsp; Rolex &nbsp;·&nbsp; Dior &nbsp;·&nbsp; Louis Vuitton &nbsp;·&nbsp; Cartier &nbsp;·&nbsp; Balenciaga &nbsp;◆&nbsp; Négociation Automatique &nbsp;◆&nbsp; Enchère Double &nbsp;◆&nbsp; Marché Décentralisé &nbsp;◆&nbsp;</span>
+          <span class="ticker-text">Couture Marketplace &nbsp;◆&nbsp; Vos envies de luxe, nos agents s'occupent du prix &nbsp;◆&nbsp; Chanel &nbsp;·&nbsp; Hermès &nbsp;·&nbsp; Rolex &nbsp;·&nbsp; Dior &nbsp;·&nbsp; Louis Vuitton &nbsp;·&nbsp; Cartier &nbsp;·&nbsp; Balenciaga &nbsp;◆&nbsp; Négociation Automatique &nbsp;◆&nbsp; Enchère Double &nbsp;◆&nbsp; Marché Décentralisé &nbsp;◆&nbsp;</span>
         </div>
       </div>
 
@@ -1473,9 +1479,9 @@ function initScrollReveal() {
         observer.unobserve(entry.target);
       }
     });
-  }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+  }, { threshold: 0.08, rootMargin: '0px 0px -30px 0px' });
 
-  document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+  document.querySelectorAll('.fade-up, .fade-left, .line-reveal').forEach(el => observer.observe(el));
 }
 
 function initTilt() {
@@ -1484,14 +1490,37 @@ function initTilt() {
       const rect = el.getBoundingClientRect();
       const x = (e.clientX - rect.left) / rect.width  - 0.5;
       const y = (e.clientY - rect.top)  / rect.height - 0.5;
-      el.style.transform = `perspective(800px) rotateX(${-y * 8}deg) rotateY(${x * 8}deg) scale(1.02)`;
+      el.style.transform = `perspective(800px) rotateX(${-y * 7}deg) rotateY(${x * 7}deg) scale(1.025)`;
       el.style.transition = 'transform 0.1s ease';
     });
     el.addEventListener('mouseleave', () => {
       el.style.transform = 'perspective(800px) rotateX(0) rotateY(0) scale(1)';
-      el.style.transition = 'transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+      el.style.transition = 'transform 0.55s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
     });
   });
+}
+
+function initScrollProgress() {
+  const fill = document.getElementById('scroll-progress-fill');
+  const dot  = document.getElementById('scroll-progress-dot');
+  if (!fill || !dot) return;
+
+  let scrollTimer = null;
+
+  function update() {
+    const max = document.documentElement.scrollHeight - window.innerHeight;
+    if (max <= 0) return;
+    const pct = Math.min((window.scrollY / max) * 100, 100);
+    fill.style.height = pct + '%';
+    dot.style.top     = pct + '%';
+    dot.classList.remove('paused');
+
+    clearTimeout(scrollTimer);
+    scrollTimer = setTimeout(() => dot.classList.add('paused'), 180);
+  }
+
+  window.addEventListener('scroll', update, { passive: true });
+  update();
 }
 
 // Reset app padding when navigating away from hero page
@@ -1518,5 +1547,6 @@ window.navigate = function(page, params) {
 
 document.addEventListener('DOMContentLoaded', () => {
   updateNavAgent();
+  initScrollProgress();
   window.navigate('accueil');
 });
