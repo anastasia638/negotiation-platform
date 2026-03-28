@@ -1,5 +1,6 @@
 package com.marketplace.controller;
 
+import com.marketplace.agent.NegotiationEngine;
 import com.marketplace.dto.NegotiationDTO;
 import com.marketplace.service.NegotiationService;
 import jakarta.validation.Valid;
@@ -13,9 +14,12 @@ import java.util.List;
 public class NegotiationController {
 
     private final NegotiationService negotiationService;
+    private final NegotiationEngine negotiationEngine;
 
-    public NegotiationController(NegotiationService negotiationService) {
+    public NegotiationController(NegotiationService negotiationService,
+                                 NegotiationEngine negotiationEngine) {
         this.negotiationService = negotiationService;
+        this.negotiationEngine = negotiationEngine;
     }
 
     // Démarrer une négociation
@@ -47,5 +51,14 @@ public class NegotiationController {
     @PatchMapping("/{id}/cancel")
     public NegotiationDTO cancel(@PathVariable Long id) {
         return negotiationService.cancel(id);
+    }
+
+    // Réponse automatique par un agent avec une stratégie
+    // POST /api/negotiations/{id}/auto-respond?responderId=2&strategy=GREEDY
+    @PostMapping("/{id}/auto-respond")
+    public NegotiationDTO autoRespond(@PathVariable Long id,
+                                      @RequestParam Long responderId,
+                                      @RequestParam String strategy) {
+        return negotiationEngine.autoRespond(id, responderId, strategy);
     }
 }
