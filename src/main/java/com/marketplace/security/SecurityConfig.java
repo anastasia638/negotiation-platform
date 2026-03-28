@@ -33,14 +33,19 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .csrf(AbstractHttpConfigurer::disable)
+            .cors(AbstractHttpConfigurer::disable)
             .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 // Endpoints publics
                 .requestMatchers("/api/auth/**", "/api/health").permitAll()
+                // Frontend statique
+                .requestMatchers("/", "/index.html", "/*.css", "/*.js", "/favicon.ico").permitAll()
                 // Swagger UI
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
                 // H2 console (dev uniquement)
                 .requestMatchers("/h2-console/**").permitAll()
+                // Lecture publique des utilisateurs et produits (pour le frontend)
+                .requestMatchers(HttpMethod.GET, "/api/users", "/api/users/**").permitAll()
                 // Produits : lecture publique, création/modification réservée aux vendeurs
                 .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/products").hasRole("SELLER")
