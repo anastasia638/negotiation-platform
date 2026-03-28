@@ -25,6 +25,7 @@ public class ProductRepositoryTest {
     public void testSaveAndFindProduct() {
         // Créer un user seller
         User seller = new User("Test Seller", "test@seller.com", UserType.SELLER);
+        seller.setPassword("hashed");
         entityManager.persist(seller);
         entityManager.flush();
         
@@ -50,6 +51,7 @@ public class ProductRepositoryTest {
     public void testFindById() {
         // Créer seller
         User seller = new User("Anastasia Seller", "anastasia@test.com", UserType.SELLER);
+        seller.setPassword("hashed");
         entityManager.persist(seller);
         
         // Créer produit

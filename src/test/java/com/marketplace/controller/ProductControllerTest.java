@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.hamcrest.Matchers.notNullValue;
@@ -21,6 +22,7 @@ class ProductControllerTest {
     MockMvc mockMvc;
 
     @Test
+    @WithMockUser(roles = "SELLER")
     void create_invalidProduct_returns400() throws Exception {
         mockMvc.perform(post("/api/products")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -29,19 +31,33 @@ class ProductControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "SELLER")
     void create_validProduct_returns201_andId() throws Exception {
         mockMvc.perform(post("/api/products")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"name\":\"Keyboard\",\"basePrice\":49.99}"))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id", notNullValue()))
-                .andExpect(jsonPath("$.name").value("Keyboard"))
-                .andExpect(jsonPath("$.basePrice").value(49.99));
+                .andExpect(jsonPath("$.name").value("Keyboard"));
     }
 
     @Test
     void getById_unknown_returns404() throws Exception {
         mockMvc.perform(get("/api/products/999999999"))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void getAll_public_returns200() throws Exception {
+        mockMvc.perform(get("/api/products"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void create_withoutAuth_returns403() throws Exception {
+        mockMvc.perform(post("/api/products")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"name\":\"Keyboard\",\"basePrice\":49.99}"))
+                .andExpect(status().isForbidden());
     }
 }

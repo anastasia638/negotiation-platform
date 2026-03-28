@@ -4,6 +4,9 @@ import com.marketplace.agent.NegotiationEngine;
 import com.marketplace.dto.NegotiationDTO;
 import com.marketplace.service.NegotiationService;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -35,16 +38,18 @@ public class NegotiationController {
         return negotiationService.findById(id);
     }
 
-    // Historique des négociations d'un acheteur
+    // Historique des négociations d'un acheteur (paginé)
     @GetMapping("/buyer/{buyerId}")
-    public List<NegotiationDTO> getByBuyer(@PathVariable Long buyerId) {
-        return negotiationService.findByBuyer(buyerId);
+    public Page<NegotiationDTO> getByBuyer(@PathVariable Long buyerId,
+            @PageableDefault(size = 20, sort = "startedAt") Pageable pageable) {
+        return negotiationService.findByBuyer(buyerId, pageable);
     }
 
-    // Historique des négociations d'un vendeur
+    // Historique des négociations d'un vendeur (paginé)
     @GetMapping("/seller/{sellerId}")
-    public List<NegotiationDTO> getBySeller(@PathVariable Long sellerId) {
-        return negotiationService.findBySeller(sellerId);
+    public Page<NegotiationDTO> getBySeller(@PathVariable Long sellerId,
+            @PageableDefault(size = 20, sort = "startedAt") Pageable pageable) {
+        return negotiationService.findBySeller(sellerId, pageable);
     }
 
     // Annuler une négociation

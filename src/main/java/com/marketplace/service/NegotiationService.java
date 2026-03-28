@@ -7,6 +7,8 @@ import com.marketplace.repository.NegotiationRepository;
 import com.marketplace.repository.OfferRepository;
 import com.marketplace.repository.ProductRepository;
 import com.marketplace.repository.UserRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -70,14 +72,12 @@ public class NegotiationService {
         return dto;
     }
 
-    public List<NegotiationDTO> findByBuyer(Long buyerId) {
-        return negotiationRepository.findByBuyerId(buyerId)
-                .stream().map(this::toDTO).toList();
+    public Page<NegotiationDTO> findByBuyer(Long buyerId, Pageable pageable) {
+        return negotiationRepository.findByBuyerId(buyerId, pageable).map(this::toDTO);
     }
 
-    public List<NegotiationDTO> findBySeller(Long sellerId) {
-        return negotiationRepository.findBySellerId(sellerId)
-                .stream().map(this::toDTO).toList();
+    public Page<NegotiationDTO> findBySeller(Long sellerId, Pageable pageable) {
+        return negotiationRepository.findBySellerId(sellerId, pageable).map(this::toDTO);
     }
 
     @Transactional
