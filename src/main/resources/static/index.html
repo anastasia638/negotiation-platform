@@ -69,6 +69,11 @@
       </div>
 
       <a class="nav-link nav-admin" data-page="admin" onclick="navigate('admin')">Admin</a>
+
+      <button class="nav-wishlist-btn" onclick="navigate('wishlist')" title="Mes favoris">
+        <span class="nav-wish-heart">♥</span>
+        <span id="nav-wishlist-count" class="nav-wish-badge" style="display:none">0</span>
+      </button>
     </div>
 
     <div class="nav-agent-badge" id="nav-agent-badge" style="display:none">
@@ -107,6 +112,15 @@
       </div>
     </div>
   </footer>
+
+  <!-- QUICK VIEW MODAL -->
+  <div id="quick-view-modal" class="quick-view-modal" role="dialog" aria-modal="true"></div>
+
+  <!-- HIGH CONTRAST TOGGLE -->
+  <button id="contrast-btn" class="contrast-toggle" onclick="toggleHighContrast()">
+    <span class="contrast-icon">◑</span>
+    <span id="contrast-label">Contraste élevé</span>
+  </button>
 
   <script src="/app.js"></script>
 </body>

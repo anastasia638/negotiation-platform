@@ -86,6 +86,8 @@ const S = {
   filterCat:       'all',
   filterBrand:     '',
   filterSearch:    '',
+  // wishlist (Set of product ids, persisted in localStorage)
+  wishlist: new Set(JSON.parse(localStorage.getItem('sa7_wishlist') || '[]')),
 };
 
 // Restore active agent from localStorage
@@ -233,6 +235,7 @@ function navigate(page, params = {}) {
     historique:          renderHistorique,
     'profil-agent':      renderProfilAgent,
     admin:               renderAdmin,
+    wishlist:            renderWishlist,
   };
 
   const fn = pages[page];
@@ -485,6 +488,7 @@ async function renderMarketplace() {
       return `<div class="grid grid-3">${list.map((p, i) => {
         const imgSrc = getProductImage(p);
         const cond   = conditionBadge(p.id);
+        const wished = S.wishlist.has(p.id);
         return `
           <div class="product-card fade-up stagger-${Math.min((i%5)+1,5)}" data-tilt
                onclick="navigate('marche-decentralise', {productId: ${p.id}})">
@@ -493,6 +497,11 @@ async function renderMarketplace() {
                    onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
               <div class="product-img-placeholder" style="display:none">${categoryEmoji(p.category)}</div>
               <div class="product-img-overlay"></div>
+              <div class="product-quickview" onclick="event.stopPropagation(); openQuickView(${p.id})">
+                <span>Quick View</span>
+              </div>
+              <button class="product-wish ${wished ? 'active' : ''}" data-wish="${p.id}"
+                      onclick="event.stopPropagation(); toggleWishlist(${p.id})">♥</button>
             </div>
             <div class="product-body">
               <div class="product-brand">${p.brand || p.category || '—'}</div>
@@ -604,48 +613,101 @@ async function renderMarcheDecentralise(params = {}) {
         </option>`).join('');
 
       app.innerHTML = `
-        <div class="page">
-          <div class="page-header">
-            <h1>🔀 Marché Décentralisé</h1>
-            <p>Négociation exclusive — 1 Acheteur vs plusieurs Vendeurs de luxe</p>
+        <div class="cfg-wrap">
+
+          <!-- Hero cinématique -->
+          <div class="cfg-hero">
+            <div class="cfg-hero-bg" style="background-image:url('${HERO_IMAGES[2]}')"></div>
+            <div class="cfg-hero-veil"></div>
+            <div class="cfg-hero-content">
+              <div class="cfg-eyebrow">◆ &nbsp; Marché Décentralisé &nbsp; ◆</div>
+              <h1 class="cfg-title">Négociation<br><em>Multi-Vendeurs</em></h1>
+              <p class="cfg-sub">1 acheteur · N vendeurs · agents intelligents</p>
+            </div>
+            <div class="cfg-deco cfg-d1">◆</div>
+            <div class="cfg-deco cfg-d2">◇</div>
+            <div class="cfg-deco cfg-d3">◆</div>
           </div>
 
-          <div class="card" style="max-width:640px">
-            <h3 style="margin-bottom:20px;color:var(--text2)">⚙️ Configuration</h3>
+          <!-- Card centrée -->
+          <div class="cfg-body">
+            <div class="cfg-card">
 
-            <div class="form-group">
-              <label>Agent Acheteur</label>
-              <input type="text" value="${S.activeAgent.name} — ${S.activeAgent.strategy}" disabled style="opacity:0.7">
-            </div>
-
-            <div class="form-group">
-              <label>Produit à négocier</label>
-              <select id="product-select">
-                <option value="">— Sélectionner un produit —</option>
-                ${productOptions}
-              </select>
-            </div>
-
-            <div class="form-row">
-              <div class="form-group">
-                <label>Votre offre initiale (€)</label>
-                <input type="number" id="initial-offer" placeholder="ex: 900" min="1">
+              <!-- Agent actif -->
+              <div class="cfg-agent-row">
+                <div class="cfg-agent-dot-wrap"><span class="agent-dot"></span></div>
+                <div class="cfg-agent-info">
+                  <div class="cfg-agent-name">${S.activeAgent.name}</div>
+                  <div class="cfg-agent-meta">Budget · ${fmt(S.activeAgent.budget || 0)}</div>
+                </div>
+                <div class="cfg-strategy-badge cfg-strat-${(S.activeAgent.strategyKey||'').toLowerCase()}">${S.activeAgent.strategy}</div>
               </div>
-              <div class="form-group">
-                <label>Rounds maximum</label>
-                <input type="number" id="max-rounds" value="${S.negoMaxRounds}" min="1" max="20">
-              </div>
-            </div>
 
-            <button class="btn btn-primary btn-lg" style="width:100%" onclick="startDecentralise()">
-              ▶ Démarrer la négociation
-            </button>
+              <div class="cfg-sep"></div>
+
+              <!-- Produit -->
+              <div class="cfg-field">
+                <label class="cfg-label">Article à négocier</label>
+                <select class="cfg-select" id="product-select" onchange="updateDecentralisePreview()">
+                  <option value="">— Sélectionner un article —</option>
+                  ${productOptions}
+                </select>
+                <div id="cfg-product-preview" class="cfg-product-preview" style="display:none"></div>
+              </div>
+
+              <!-- Offre + Rounds -->
+              <div class="cfg-two-col">
+                <div class="cfg-field">
+                  <label class="cfg-label">Offre initiale</label>
+                  <div class="cfg-euro-wrap">
+                    <input class="cfg-input" type="number" id="initial-offer" placeholder="ex : 900" min="1">
+                    <span class="cfg-euro-sign">€</span>
+                  </div>
+                </div>
+                <div class="cfg-field">
+                  <label class="cfg-label">Rounds maximum</label>
+                  <input class="cfg-input" type="number" id="max-rounds" value="${S.negoMaxRounds}" min="1" max="20">
+                </div>
+              </div>
+
+              <!-- CTA -->
+              <button class="cfg-cta" onclick="startDecentralise()">
+                <span class="cfg-cta-gem">◆</span>
+                Lancer la négociation
+                <span class="cfg-cta-arrow">→</span>
+              </button>
+
+            </div>
           </div>
         </div>`;
 
+      window.updateDecentralisePreview = () => {
+        const sel = document.getElementById('product-select');
+        const pid = sel?.value;
+        const preview = document.getElementById('cfg-product-preview');
+        const offerInput = document.getElementById('initial-offer');
+        if (!pid || !preview) return;
+        const p = products.find(x => x.id == pid);
+        if (!p) { preview.style.display = 'none'; return; }
+        const img = getProductImage(p);
+        preview.style.display = 'flex';
+        preview.innerHTML = `
+          <div class="cfg-preview-img" style="background-image:url('${img}')"></div>
+          <div class="cfg-preview-info">
+            <div class="cfg-preview-brand">${p.brand || p.category}</div>
+            <div class="cfg-preview-name">${p.name}</div>
+            <div class="cfg-preview-range">
+              <span>Min <strong>${fmt(p.priceMin)}</strong></span>
+              <span class="cfg-preview-sep">·</span>
+              <span>Max <strong style="color:var(--gold)">${fmt(p.priceMax)}</strong></span>
+            </div>
+          </div>`;
+        if (offerInput && !offerInput.value) offerInput.value = Math.round(p.priceMin * 0.88);
+      };
+
       if (S.negoProduct) {
         document.getElementById('product-select').value = S.negoProduct.id;
-        document.getElementById('initial-offer').value = Math.round(S.negoProduct.priceMin * 0.9);
+        updateDecentralisePreview();
       }
     }
 
@@ -858,68 +920,113 @@ async function renderMarcheCentralise() {
     const sellers = users.filter(u => u.userType === 'SELLER');
     const cats    = [...new Set(products.map(p => p.category).filter(Boolean))];
 
+    const STRAT_COLORS = { COOL_HEADED: 'var(--crimson)', GREEDY: '#E8203E', FRUGAL: 'var(--grey)' };
+    const STRAT_LABELS = { COOL_HEADED: 'Adaptatif', GREEDY: 'Agressif', FRUGAL: 'Conservateur' };
+    const CAT_EMOJI    = { bags:'👜', watches:'⌚', clothing:'👗', perfumes:'🌹', shoes:'👠' };
+
     app.innerHTML = `
-      <div class="page">
-        <div class="page-header">
-          <h1>🏛 Marché Centralisé</h1>
-          <p>Enchère double — Plusieurs acheteurs et vendeurs en simultané</p>
+      <div class="cfg-wrap">
+
+        <!-- Hero cinématique -->
+        <div class="cfg-hero">
+          <div class="cfg-hero-bg" style="background-image:url('${HERO_IMAGES[0]}')"></div>
+          <div class="cfg-hero-veil"></div>
+          <div class="cfg-hero-content">
+            <div class="cfg-eyebrow">◆ &nbsp; Marché Centralisé &nbsp; ◆</div>
+            <h1 class="cfg-title">Enchère<br><em>Double Face</em></h1>
+            <p class="cfg-sub">acheteurs · vendeurs · matching algorithmique</p>
+          </div>
+          <div class="cfg-deco cfg-d1">◆</div>
+          <div class="cfg-deco cfg-d2">◇</div>
+          <div class="cfg-deco cfg-d3">◆</div>
         </div>
 
-        <div class="card" style="max-width:800px">
-          <h3 style="margin-bottom:20px;color:var(--text2)">⚙️ Configuration des stratégies</h3>
+        <!-- Card centrée -->
+        <div class="cfg-body">
+          <div class="cfg-card" style="max-width:700px">
 
-          <div class="form-row">
-            <div class="form-group">
-              <label>Catégorie produit</label>
-              <select id="cc-cat">
-                ${cats.map(c => `<option value="${c}">${c}</option>`).join('')}
-              </select>
+            <!-- Catégorie + acheteurs -->
+            <div class="cfg-two-col" style="margin-bottom:0">
+              <div class="cfg-field">
+                <label class="cfg-label">Catégorie de produits</label>
+                <select class="cfg-select" id="cc-cat">
+                  ${cats.map(c => `<option value="${c}">${CAT_EMOJI[c]||'💎'} ${c.charAt(0).toUpperCase()+c.slice(1)}</option>`).join('')}
+                </select>
+              </div>
+              <div class="cfg-field">
+                <label class="cfg-label">Nombre d'acheteurs</label>
+                <select class="cfg-select" id="cc-nb-buyers">
+                  ${[2,3,4,5].map(n => `<option value="${n}" ${n===3?'selected':''}>${n} acheteur${n>1?'s':''}</option>`).join('')}
+                </select>
+              </div>
             </div>
-            <div class="form-group">
-              <label>Nombre d'acheteurs</label>
-              <select id="cc-nb-buyers">
-                ${[2,3,4,5].map(n => `<option value="${n}" ${n===3?'selected':''}>${n}</option>`).join('')}
-              </select>
-            </div>
-          </div>
 
-          <div id="strategy-grid" style="margin:16px 0">
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-              <div>
-                <h4 style="color:var(--text2);font-size:13px;margin-bottom:12px">ACHETEURS</h4>
-                ${buyers.slice(0,3).map((u, i) => {
-                  const p = AGENT_PROFILES[i] || AGENT_PROFILES[0];
-                  return `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:13px">
-                    <span>${u.name}</span>
-                    <select style="background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:4px 8px;border-radius:6px;font-size:12px">
-                      <option ${p.strategyKey==='COOL_HEADED'?'selected':''}>Adaptatif</option>
-                      <option ${p.strategyKey==='GREEDY'?'selected':''}>Agressif</option>
-                      <option ${p.strategyKey==='FRUGAL'?'selected':''}>Conservateur</option>
-                    </select>
+            <div class="cfg-sep"></div>
+
+            <!-- Participants -->
+            <div class="cfg-participants-grid">
+              <!-- Acheteurs -->
+              <div class="cfg-participants-col">
+                <div class="cfg-participants-title">
+                  <span class="cfg-p-dot" style="background:var(--gold)"></span>
+                  Acheteurs
+                </div>
+                ${buyers.slice(0,5).map((u, i) => {
+                  const p   = AGENT_PROFILES[i] || AGENT_PROFILES[0];
+                  const col = STRAT_COLORS[p.strategyKey] || 'var(--grey)';
+                  const lbl = STRAT_LABELS[p.strategyKey] || 'Adaptatif';
+                  const initials = u.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+                  return `
+                  <div class="cfg-participant fade-up stagger-${Math.min(i+1,5)}">
+                    <div class="cfg-p-avatar" style="background:${col}22;color:${col};border-color:${col}44">${initials}</div>
+                    <div class="cfg-p-info">
+                      <div class="cfg-p-name">${u.name.split(' ')[0]}</div>
+                      <div class="cfg-p-strat" style="color:${col}">${lbl}</div>
+                    </div>
+                    <div class="cfg-p-budget">${fmt(p.budget)}</div>
                   </div>`;
                 }).join('')}
               </div>
-              <div>
-                <h4 style="color:var(--text2);font-size:13px;margin-bottom:12px">VENDEURS</h4>
+
+              <!-- Vendeurs -->
+              <div class="cfg-participants-col">
+                <div class="cfg-participants-title">
+                  <span class="cfg-p-dot" style="background:var(--crimson)"></span>
+                  Vendeurs
+                </div>
                 ${sellers.map((u, i) => {
-                  const strats = ['Adaptatif','Flexible','Ferme'];
-                  return `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:13px">
-                    <span>${u.name}</span>
-                    <select style="background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:4px 8px;border-radius:6px;font-size:12px">
-                      <option>${strats[i % strats.length]}</option>
-                      <option>Adaptatif</option>
-                      <option>Ferme</option>
-                    </select>
+                  const strats = [
+                    {lbl:'Adaptatif', col:'var(--crimson)'},
+                    {lbl:'Flexible',  col:'var(--gold)'},
+                    {lbl:'Ferme',     col:'var(--grey)'},
+                  ];
+                  const s = strats[i % strats.length];
+                  const initials = u.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+                  return `
+                  <div class="cfg-participant fade-up stagger-${Math.min(i+1,5)}">
+                    <div class="cfg-p-avatar" style="background:${s.col}22;color:${s.col};border-color:${s.col}44">${initials}</div>
+                    <div class="cfg-p-info">
+                      <div class="cfg-p-name">${u.name.split(' ')[0]}</div>
+                      <div class="cfg-p-strat" style="color:${s.col}">${s.lbl}</div>
+                    </div>
                   </div>`;
                 }).join('')}
               </div>
             </div>
-          </div>
 
-          <button class="btn btn-primary btn-lg" style="width:100%" onclick="runCentralise()">▶ Démarrer</button>
+            <div class="cfg-sep"></div>
+
+            <!-- CTA -->
+            <button class="cfg-cta" onclick="runCentralise()">
+              <span class="cfg-cta-gem">◆</span>
+              Démarrer l'enchère
+              <span class="cfg-cta-arrow">→</span>
+            </button>
+
+          </div>
         </div>
 
-        <div id="centralise-result"></div>
+        <div id="centralise-result" style="padding:0 40px 60px;max-width:900px;margin:0 auto"></div>
       </div>`;
 
     function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
@@ -1004,13 +1111,14 @@ async function renderMarcheCentralise() {
         if (transactions.length > 0) {
           document.getElementById('tx-history').style.display = 'block';
           document.getElementById('tx-list').innerHTML = transactions.map(tx => `
-            <div style="display:flex;align-items:center;gap:10px;font-size:13px;padding:8px 12px;background:var(--white);border-left:3px solid var(--gold)">
+            <div style="display:flex;align-items:center;gap:10px;font-size:13px;padding:8px 12px;background:var(--surface2);border-left:3px solid var(--gold);color:var(--white)">
               <span style="color:var(--grey);min-width:70px">Round ${tx.round}</span>
-              <span style="font-weight:600">${tx.buyerShort}</span>
-              <span style="color:var(--grey)">→</span>
-              <span style="font-weight:600">${tx.sellerShort}</span>
-              <span style="color:var(--grey)">:</span>
-              <span style="color:var(--gold);font-weight:700;margin-left:auto">${fmt(tx.price)}</span>
+              <span style="font-weight:600;color:var(--white-dim)">${tx.buyerShort}</span>
+              <span style="color:var(--crimson)">→</span>
+              <span style="font-weight:600;color:var(--white-dim)">${tx.sellerShort}</span>
+              <span style="color:var(--grey)">|</span>
+              <span style="font-size:12px;color:var(--grey)">${tx.product || ''}</span>
+              <span style="color:var(--gold);font-weight:700;margin-left:auto;font-family:var(--font-display);font-style:italic;font-size:15px">${fmt(tx.price)}</span>
             </div>`).join('');
         }
 
@@ -1020,14 +1128,14 @@ async function renderMarcheCentralise() {
             <div>
               <div style="font-size:11px;letter-spacing:.1em;color:var(--grey);margin-bottom:8px">OFFRES ACHETEURS</div>
               ${currentBids.filter(b=>!b.matched).map(b=>`
-                <div style="display:flex;justify-content:space-between;padding:6px 10px;background:var(--cream2);margin-bottom:4px">
+                <div style="display:flex;justify-content:space-between;padding:6px 10px;background:var(--surface3);margin-bottom:4px">
                   <span>${b.buyer}</span><span style="color:var(--gold);font-weight:600">${fmt(b.bid)}</span>
                 </div>`).join('') || '<div style="color:var(--grey);padding:8px">Tous les acheteurs ont conclu</div>'}
             </div>
             <div>
               <div style="font-size:11px;letter-spacing:.1em;color:var(--grey);margin-bottom:8px">DEMANDES VENDEURS</div>
               ${currentAsks.map((a,i)=>`
-                <div style="display:flex;justify-content:space-between;padding:6px 10px;background:var(--cream2);margin-bottom:4px;${a.matched?'opacity:.4;text-decoration:line-through':''}">
+                <div style="display:flex;justify-content:space-between;padding:6px 10px;background:var(--surface3);margin-bottom:4px;${a.matched?'opacity:.4;text-decoration:line-through':''}">
                   <span>${a.seller}</span><span style="color:${a.matched?'var(--grey)':'var(--crimson)'};font-weight:600">${a.matched?'✓ Vendu':fmt(a.ask)}</span>
                 </div>`).join('')}
             </div>
@@ -1078,6 +1186,19 @@ async function renderMarcheCentralise() {
         ${transactions.length === 0 ? '<div class="empty-state" style="padding:24px;margin-top:16px"><p>Aucun accord après '+ round +' rounds — prix trop éloignés</p></div>' : ''}`;
 
       toast(`Enchère terminée en ${round} round(s) — ${transactions.length} transaction(s)`, 'success');
+
+      // Persist dans l'historique
+      if (transactions.length > 0) {
+        const hist = JSON.parse(localStorage.getItem('sa7_centralise_history') || '[]');
+        transactions.forEach(tx => hist.push({
+          ...tx,
+          type: 'CENTRALISE',
+          date: new Date().toISOString(),
+          agentName: S.activeAgent?.name || '—',
+          rounds: round,
+        }));
+        localStorage.setItem('sa7_centralise_history', JSON.stringify(hist.slice(-200)));
+      }
     };
 
   } catch(e) {
@@ -1118,12 +1239,42 @@ async function renderHistorique() {
     const data = await apiGetBuyerNegos(S.activeAgent.id);
     const negos = (data.content || data || []);
 
-    const totalVol  = negos.filter(n=>n.status==='AGREED').reduce((s,n) => s + (n.finalPrice || 0), 0);
-    const avgPrice  = negos.filter(n=>n.status==='AGREED').length
-      ? Math.round(totalVol / negos.filter(n=>n.status==='AGREED').length) : 0;
-    const surplus   = negos.filter(n=>n.status==='AGREED').reduce((s,n) => {
-      return s + Math.max(0, (n.priceMax || 0) - (n.finalPrice || 0));
-    }, 0);
+    // Transactions Centralisé sauvegardées localement
+    const centraliseAll = JSON.parse(localStorage.getItem('sa7_centralise_history') || '[]');
+
+    const agreedNegos   = negos.filter(n => n.status === 'AGREED');
+    const totalVolDec   = agreedNegos.reduce((s,n) => s + (n.finalPrice || 0), 0);
+    const totalVolCen   = centraliseAll.reduce((s,t) => s + (t.price || 0), 0);
+    const totalTx       = agreedNegos.length + centraliseAll.length;
+    const totalVol      = totalVolDec + totalVolCen;
+    const avgPrice      = totalTx ? Math.round(totalVol / totalTx) : 0;
+    const surplus       = agreedNegos.reduce((s,n) => s + Math.max(0, (n.priceMax||0) - (n.finalPrice||0)), 0);
+
+    // Rows décentralisé
+    const decRows = negos.length === 0 ? '' : negos.map(n => `<tr>
+      <td class="text-muted">#${n.id}</td>
+      <td>${n.productName || '—'}</td>
+      <td>${n.sellerName || '—'}</td>
+      <td><span class="tag">Décentralisé</span></td>
+      <td class="${n.finalPrice ? 'text-gold font-bold' : 'text-muted'}">${fmt(n.finalPrice)}</td>
+      <td>${n.offers ? n.offers.length : '—'}</td>
+      <td>${statusBadge(n.status)}</td>
+      <td class="text-muted">${n.startedAt ? new Date(n.startedAt).toLocaleDateString('fr-FR') : '—'}</td>
+    </tr>`).join('');
+
+    // Rows centralisé
+    const cenRows = centraliseAll.slice().reverse().map((tx, i) => `<tr>
+      <td class="text-muted">C${i+1}</td>
+      <td>${tx.product || '—'}</td>
+      <td>${tx.sellerShort || '—'}</td>
+      <td><span class="tag" style="border-color:var(--gold);color:var(--gold)">Centralisé</span></td>
+      <td class="text-gold font-bold">${fmt(tx.price)}</td>
+      <td>${tx.rounds || '—'}</td>
+      <td><span class="nego-status-badge status-agreed">Accord ✓</span></td>
+      <td class="text-muted">${tx.date ? new Date(tx.date).toLocaleDateString('fr-FR') : '—'}</td>
+    </tr>`).join('');
+
+    const allRows = decRows + cenRows || `<tr><td colspan="8" style="text-align:center;color:var(--grey);padding:40px">Aucune négociation — lancez une enchère pour commencer</td></tr>`;
 
     app.innerHTML = `
       <div class="page">
@@ -1133,41 +1284,30 @@ async function renderHistorique() {
         </div>
 
         <div class="stats-row">
-          <div class="stat-card"><div class="stat-label">Total Transactions</div><div class="stat-value">${negos.filter(n=>n.status==='AGREED').length}</div></div>
-          <div class="stat-card"><div class="stat-label">Volume Total</div><div class="stat-value text-gold">${fmt(totalVol)}</div></div>
-          <div class="stat-card"><div class="stat-label">Prix Moyen</div><div class="stat-value">${fmt(avgPrice)}</div></div>
-          <div class="stat-card"><div class="stat-label">Surplus Moyen</div><div class="stat-value text-green">${negos.filter(n=>n.status==='AGREED').length ? '+' + fmt(Math.round(surplus / Math.max(1, negos.filter(n=>n.status==='AGREED').length))) : '—'}</div></div>
+          <div class="stat-card"><div class="stat-label">Total Transactions</div><div class="stat-value" data-counter>${totalTx}</div></div>
+          <div class="stat-card"><div class="stat-label">Volume Total</div><div class="stat-value text-gold" data-counter>${totalVol} €</div></div>
+          <div class="stat-card"><div class="stat-label">Prix Moyen</div><div class="stat-value" data-counter>${avgPrice} €</div></div>
+          <div class="stat-card"><div class="stat-label">Surplus Moyen</div><div class="stat-value text-green">${agreedNegos.length ? '+' + fmt(Math.round(surplus / Math.max(1, agreedNegos.length))) : '—'}</div></div>
         </div>
 
         <div class="table-wrap">
           <table>
             <thead>
               <tr>
-                <th>#ID</th>
-                <th>Produit</th>
-                <th>Vendeur</th>
-                <th>Type</th>
-                <th>Prix Final</th>
-                <th>Rounds</th>
-                <th>Statut</th>
-                <th>Date</th>
+                <th>#ID</th><th>Produit</th><th>Vendeur</th><th>Type</th>
+                <th>Prix Final</th><th>Rounds</th><th>Statut</th><th>Date</th>
               </tr>
             </thead>
-            <tbody>
-              ${negos.length === 0 ? `<tr><td colspan="8" style="text-align:center;color:var(--text3);padding:40px">Aucune négociation</td></tr>` :
-                negos.map(n => `<tr>
-                  <td class="text-muted">#${n.id}</td>
-                  <td>${n.productName || '—'}</td>
-                  <td>${n.sellerName || '—'}</td>
-                  <td><span class="tag">Décentralisé</span></td>
-                  <td class="${n.finalPrice ? 'text-gold font-bold' : 'text-muted'}">${fmt(n.finalPrice)}</td>
-                  <td>${n.offers ? n.offers.length : '—'}</td>
-                  <td>${statusBadge(n.status)}</td>
-                  <td class="text-muted">${n.startedAt ? new Date(n.startedAt).toLocaleDateString('fr-FR') : '—'}</td>
-                </tr>`).join('')}
-            </tbody>
+            <tbody>${allRows}</tbody>
           </table>
         </div>
+
+        ${centraliseAll.length > 0 ? `
+        <div style="margin-top:12px;text-align:right">
+          <button class="btn btn-ghost btn-sm" onclick="if(confirm('Effacer tout l\'historique Centralisé ?')){localStorage.removeItem('sa7_centralise_history');navigate('historique');}">
+            🗑 Effacer historique centralisé
+          </button>
+        </div>` : ''}
       </div>`;
   } catch(e) {
     app.innerHTML = `<div class="page"><div class="empty-state"><div class="empty-icon">⚠️</div><p>${e.message}</p></div></div>`;
@@ -1526,18 +1666,19 @@ function initPreloader(onDone) {
   const el2 = document.getElementById('pl-line2');
   if (!pl) { onDone(); return; }
 
-  // Texte statique (pas de typing → pas d'attente)
+  // Texte statique
   if (el1) el1.textContent = 'Couture';
   if (el2) el2.textContent = 'Marketplace';
 
-  // Afficher brièvement (0.55s) puis fade out rapide
+  // Rendre la page en arrière-plan AVANT le fade du preloader
+  // → page déjà prête quand le fondu commence = blend parfait
+  setTimeout(() => { onDone(); }, 140);
+
+  // Fade du preloader après que la page est déjà rendue
   setTimeout(() => {
     pl.classList.add('hidden');
-    // Lancer le contenu pendant le fade out → seamless
-    onDone();
-    // Retirer du DOM après la transition
-    setTimeout(() => { pl.style.display = 'none'; }, 500);
-  }, 550);
+    setTimeout(() => { pl.style.display = 'none'; }, 460);
+  }, 440);
 }
 
 // ==================== SWING BAR ====================
@@ -1574,11 +1715,11 @@ async function pageTransition(callback) {
   if (!overlay) { callback(); _transitioning = false; return; }
 
   overlay.classList.add('active');
-  await new Promise(r => setTimeout(r, 300));
+  await new Promise(r => setTimeout(r, 380));
 
   callback();
 
-  await new Promise(r => setTimeout(r, 60));
+  await new Promise(r => setTimeout(r, 80));
   overlay.classList.remove('active');
   _transitioning = false;
 }
@@ -1624,6 +1765,194 @@ function initCounters() {
   }, { threshold: 0.6 });
 
   document.querySelectorAll('.stat-value').forEach(el => observer.observe(el));
+}
+
+// ==================== WISHLIST ====================
+
+function saveWishlist() {
+  localStorage.setItem('sa7_wishlist', JSON.stringify([...S.wishlist]));
+}
+
+function updateWishlistBadge() {
+  const badge = document.getElementById('nav-wishlist-count');
+  if (!badge) return;
+  const count = S.wishlist.size;
+  badge.textContent = count;
+  badge.style.display = count > 0 ? 'flex' : 'none';
+}
+
+function toggleWishlist(productId) {
+  if (S.wishlist.has(productId)) {
+    S.wishlist.delete(productId);
+    toast('Retiré des favoris', 'info');
+  } else {
+    S.wishlist.add(productId);
+    toast('Ajouté aux favoris ♥', 'success');
+  }
+  saveWishlist();
+  updateWishlistBadge();
+  // Update every heart button for this product on the page
+  document.querySelectorAll(`[data-wish="${productId}"]`).forEach(btn => {
+    btn.classList.toggle('active', S.wishlist.has(productId));
+  });
+  // Update wishlist button text inside quick view if open
+  const qvWishBtn = document.querySelector('.qv-wish-btn');
+  if (qvWishBtn) {
+    const wished = S.wishlist.has(productId);
+    qvWishBtn.textContent = wished ? '♥ Dans la wishlist' : '♡ Ajouter aux favoris';
+    qvWishBtn.classList.toggle('wished', wished);
+  }
+}
+
+function renderWishlist() {
+  setPage('');
+  const app = document.getElementById('app');
+
+  if (!S.wishlist.size) {
+    app.innerHTML = `
+      <div class="page">
+        <div class="page-header">
+          <h1>♥ Mes Favoris</h1>
+          <p>Vos articles de luxe sauvegardés</p>
+        </div>
+        <div class="wishlist-empty">
+          <div class="wish-icon">♥</div>
+          <p>Votre wishlist est vide.<br>Parcourez le marketplace pour sauvegarder vos coups de cœur.</p>
+          <br>
+          <button class="btn btn-primary" onclick="navigate('marketplace')">Explorer le marketplace</button>
+        </div>
+      </div>`;
+    return;
+  }
+
+  // Load products if not cached
+  (S.products.length ? Promise.resolve(S.products) : apiGetProducts().then(p => { S.products = p; return p; }))
+    .then(products => {
+      const saved = products.filter(p => S.wishlist.has(p.id));
+      if (!saved.length) {
+        app.innerHTML = `<div class="page"><div class="page-header"><h1>♥ Mes Favoris</h1></div><div class="wishlist-empty"><div class="wish-icon">♥</div><p>Aucun produit trouvé.</p></div></div>`;
+        return;
+      }
+      const cards = saved.map((p, i) => {
+        const imgSrc = getProductImage(p);
+        const cond   = conditionBadge(p.id);
+        return `
+          <div class="product-card fade-up stagger-${Math.min((i%5)+1,5)}" data-tilt
+               onclick="navigate('marche-decentralise', {productId: ${p.id}})">
+            <div class="product-img">
+              <img src="${imgSrc}" alt="${p.name}"
+                   onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+              <div class="product-img-placeholder" style="display:none">${categoryEmoji(p.category)}</div>
+              <div class="product-img-overlay"></div>
+              <div class="product-quickview" onclick="event.stopPropagation(); openQuickView(${p.id})">
+                <span>Quick View</span>
+              </div>
+              <button class="product-wish active" data-wish="${p.id}"
+                      onclick="event.stopPropagation(); toggleWishlist(${p.id})">♥</button>
+            </div>
+            <div class="product-body">
+              <div class="product-brand">${p.brand || p.category || '—'}</div>
+              <div class="product-name">${p.name}</div>
+              <div class="product-seller">Par ${p.sellerName || '—'} &nbsp; ${cond}</div>
+              <div class="product-prices">
+                <div class="price-block"><label>Min</label><div class="price">${fmt(p.priceMin)}</div></div>
+                <div class="price-block"><label>Max</label><div class="price gold">${fmt(p.priceMax)}</div></div>
+              </div>
+            </div>
+            <div class="product-footer">
+              <span>Stock : ${p.stockQuantity ?? '—'}</span>
+              <span class="tag">${p.category || '—'}</span>
+            </div>
+          </div>`;
+      }).join('');
+      app.innerHTML = `
+        <div class="page">
+          <div class="page-header">
+            <h1>♥ Mes Favoris</h1>
+            <p>${saved.length} article${saved.length > 1 ? 's' : ''} sauvegardé${saved.length > 1 ? 's' : ''}</p>
+          </div>
+          <div class="grid grid-3">${cards}</div>
+        </div>`;
+      setTimeout(() => { initScrollReveal(); initTilt(); }, 60);
+    });
+}
+
+// ==================== QUICK VIEW ====================
+
+function openQuickView(productId) {
+  const p = S.products.find(x => x.id === productId);
+  if (!p) { toast('Produit introuvable', 'error'); return; }
+
+  const imgSrc = getProductImage(p);
+  const cond   = conditionBadge(p.id);
+  const wished = S.wishlist.has(productId);
+
+  const modal = document.getElementById('quick-view-modal');
+  modal.innerHTML = `
+    <div class="qv-backdrop" onclick="closeQuickView()"></div>
+    <div class="qv-panel">
+      <button class="qv-close" onclick="closeQuickView()" title="Fermer">✕</button>
+      <div class="qv-img">
+        <img src="${imgSrc}" alt="${p.name}"
+             onerror="this.style.display='none'">
+        <div class="qv-img-overlay"></div>
+        <button class="qv-wish ${wished ? 'active' : ''}" data-wish="${p.id}"
+                onclick="toggleWishlist(${p.id})">♥</button>
+      </div>
+      <div class="qv-body">
+        <div class="qv-brand">${p.brand || p.category || '—'}</div>
+        <h2 class="qv-title">${p.name}</h2>
+        <div class="qv-seller">Vendu par <span>${p.sellerName || '—'}</span> &nbsp; ${cond}</div>
+        <div class="qv-prices">
+          <div class="qv-price-block">
+            <label>Prix minimum</label>
+            <div class="qv-price">${fmt(p.priceMin)}</div>
+          </div>
+          <div class="qv-price-block">
+            <label>Prix maximum</label>
+            <div class="qv-price gold">${fmt(p.priceMax)}</div>
+          </div>
+        </div>
+        <div class="qv-stock">Stock disponible : <strong>${p.stockQuantity ?? '—'}</strong> unité${(p.stockQuantity||0) > 1 ? 's' : ''}</div>
+        <div class="qv-actions">
+          <button class="btn btn-primary"
+                  onclick="closeQuickView(); navigate('marche-decentralise', {productId: ${p.id}})">
+            Lancer la négociation →
+          </button>
+          <button class="btn btn-ghost qv-wish-btn ${wished ? 'wished' : ''}"
+                  onclick="toggleWishlist(${p.id})">
+            ${wished ? '♥ Dans la wishlist' : '♡ Ajouter aux favoris'}
+          </button>
+        </div>
+      </div>
+    </div>`;
+
+  modal.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeQuickView() {
+  const modal = document.getElementById('quick-view-modal');
+  if (!modal) return;
+  modal.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+// ==================== HIGH CONTRAST ====================
+
+function toggleHighContrast() {
+  const isHC = document.body.classList.toggle('high-contrast');
+  localStorage.setItem('sa7_high_contrast', isHC ? '1' : '0');
+  const label = document.getElementById('contrast-label');
+  if (label) label.textContent = isHC ? 'Contraste normal' : 'Contraste élevé';
+}
+
+function initHighContrast() {
+  if (localStorage.getItem('sa7_high_contrast') === '1') {
+    document.body.classList.add('high-contrast');
+    const label = document.getElementById('contrast-label');
+    if (label) label.textContent = 'Contraste normal';
+  }
 }
 
 // ==================== ANIMATIONS & EFFECTS ====================
@@ -1687,7 +2016,11 @@ function resetAppPadding() {
 }
 
 // ==================== INIT ====================
-window.navigate = navigate;
+window.navigate         = navigate;
+window.openQuickView    = openQuickView;
+window.closeQuickView   = closeQuickView;
+window.toggleWishlist   = toggleWishlist;
+window.toggleHighContrast = toggleHighContrast;
 
 // Patch navigate: add page transition + cleanup
 const _origNavigate = navigate;
@@ -1704,8 +2037,15 @@ window.navigate = function(page, params) {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
+  initHighContrast();
   initCursor();
   initSwingBar();
+  updateWishlistBadge();
+
+  // Close quick view on Escape
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeQuickView();
+  });
 
   initPreloader(() => {
     updateNavAgent();
