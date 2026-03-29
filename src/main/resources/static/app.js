@@ -675,7 +675,7 @@ async function renderMarcheDecentralise(params = {}) {
                 <div class="cfg-field">
                   <label class="cfg-label">Offre initiale</label>
                   <div class="cfg-euro-wrap">
-                    <input class="cfg-input" type="number" id="initial-offer" placeholder="ex : 900" min="1" oninput="updateDecentralisePreview()">
+                    <input class="cfg-input" type="text" inputmode="numeric" id="initial-offer" placeholder="ex : 9 000" oninput="updatePriceEstimate()">
                     <span class="cfg-euro-sign">€</span>
                   </div>
                   <div id="cfg-estimate" class="cfg-estimate" style="display:none"></div>
@@ -725,7 +725,10 @@ async function renderMarcheDecentralise(params = {}) {
               <span>Max <strong style="color:var(--gold)">${fmt(p.priceMax)}</strong></span>
             </div>
           </div>`;
-        if (offerInput && !offerInput.value) offerInput.value = Math.round(p.priceMin * 0.88);
+        if (offerInput && !offerInput.value) {
+          const suggested = Math.round(p.priceMax * 0.78);
+          offerInput.value = suggested.toLocaleString('fr-FR');
+        }
         updatePriceEstimate();
         const compBtn = document.getElementById('cfg-comparateur-btn');
         if (compBtn) compBtn.style.display = 'block';
@@ -739,13 +742,39 @@ async function renderMarcheDecentralise(params = {}) {
         const sel = document.getElementById('product-select');
         const pid = sel?.value;
         const estimateEl = document.getElementById('cfg-estimate');
-        if (!pid || !estimateEl) return;
+        if (!estimateEl) return;
+        if (!pid) { estimateEl.style.display = 'none'; return; }
         const p = products.find(x => x.id == pid);
         if (!p) { estimateEl.style.display = 'none'; return; }
-        const estimate  = Math.round(p.priceMin * 0.95 + p.priceMax * 0.35);
-        const strategy  = S.activeAgent ? S.activeAgent.strategy : 'Adaptatif';
+
+        const userOffer  = parseFloat(document.getElementById('initial-offer')?.value) || 0;
+        const goodOffer  = Math.round(p.priceMax * 0.78);   // zone idéale = ~78% du max
+        const estimate   = Math.round(p.priceMin * 0.95 + p.priceMax * 0.35);
+        const strategy   = S.activeAgent ? S.activeAgent.strategy : 'Adaptatif';
+        const pct        = userOffer > 0 ? Math.round((userOffer / p.priceMax) * 100) : null;
+
         estimateEl.style.display = 'block';
-        estimateEl.textContent   = `◆ Estimation : accord probable autour de ${Math.round(estimate/1000)}k€ (stratégie ${strategy})`;
+
+        // Alerte si offre trop basse
+        if (userOffer > 0 && userOffer < p.priceMin * 0.6) {
+          estimateEl.innerHTML = `⚠️ Offre trop basse (${pct}% du max) — le vendeur refusera.
+            Recommandé : <strong>${goodOffer.toLocaleString('fr-FR')} €</strong> (78% du max)`;
+          estimateEl.style.borderLeftColor = 'var(--crimson)';
+          estimateEl.style.background      = 'rgba(196,18,48,0.08)';
+          estimateEl.style.color           = 'var(--crimson2)';
+        } else if (userOffer > 0 && userOffer < p.priceMin) {
+          estimateEl.innerHTML = `⚠️ Offre inférieure au prix minimum (${fmt(p.priceMin)}) — risque d'échec.
+            Zone recommandée : ${fmt(Math.round(p.priceMin * 0.85))} — ${fmt(goodOffer)}`;
+          estimateEl.style.borderLeftColor = '#C9A84C';
+          estimateEl.style.background      = 'rgba(201,168,76,0.08)';
+          estimateEl.style.color           = 'var(--gold)';
+        } else {
+          const pctStr = pct !== null ? ` (${pct}% du max)` : '';
+          estimateEl.innerHTML = `◆ Accord probable autour de <strong>${estimate.toLocaleString('fr-FR')} €</strong>${pctStr} · stratégie ${strategy}`;
+          estimateEl.style.borderLeftColor = 'var(--gold)';
+          estimateEl.style.background      = 'var(--gold-dim)';
+          estimateEl.style.color           = 'var(--gold)';
+        }
       };
 
       if (S.negoProduct) {
@@ -758,7 +787,7 @@ async function renderMarcheDecentralise(params = {}) {
 
     window.startDecentralise = async () => {
       const productId = document.getElementById('product-select').value;
-      const offer     = parseFloat(document.getElementById('initial-offer').value);
+      const offer     = parseFloat(String(document.getElementById('initial-offer').value).replace(/\s/g, '').replace(',', '.'));
       const maxR      = parseInt(document.getElementById('max-rounds').value) || 10;
 
       if (!productId || !offer || offer <= 0) {
