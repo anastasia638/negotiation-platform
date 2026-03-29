@@ -86,6 +86,8 @@ const S = {
   filterCat:       'all',
   filterBrand:     '',
   filterSearch:    '',
+  filterPriceMin:  0,
+  filterPriceMax:  99999,
   // wishlist (Set of product ids, persisted in localStorage)
   wishlist: new Set(JSON.parse(localStorage.getItem('sa7_wishlist') || '[]')),
 };
@@ -236,6 +238,8 @@ function navigate(page, params = {}) {
     'profil-agent':      renderProfilAgent,
     admin:               renderAdmin,
     wishlist:            renderWishlist,
+    comparateur:         renderComparateur,
+    dashboard:           renderDashboard,
   };
 
   const fn = pages[page];
@@ -479,7 +483,8 @@ async function renderMarketplace() {
         const searchOk = !S.filterSearch ||
           p.name.toLowerCase().includes(S.filterSearch.toLowerCase()) ||
           (p.brand||'').toLowerCase().includes(S.filterSearch.toLowerCase());
-        return catOk && brandOk && searchOk;
+        const priceOk  = (p.priceMin || 0) >= S.filterPriceMin && (p.priceMin || 0) <= S.filterPriceMax;
+        return catOk && brandOk && searchOk && priceOk;
       });
     }
 
@@ -548,6 +553,16 @@ async function renderMarketplace() {
           oninput="S.filterSearch=this.value; reRenderGrid()" value="${S.filterSearch}">
 
         <div class="chip-row">${catChips}</div>
+
+        <div class="price-range-wrap">
+          <label class="price-range-label">Prix : <span id="pr-min-val">${S.filterPriceMin === 0 ? '0' : fmt(S.filterPriceMin)}</span> — <span id="pr-max-val">${S.filterPriceMax >= 99999 ? '∞' : fmt(S.filterPriceMax)}</span></label>
+          <div class="dual-slider">
+            <input type="range" id="pr-min" class="range-min" min="0" max="20000" step="100" value="${Math.min(S.filterPriceMin, 20000)}"
+              oninput="S.filterPriceMin=Math.min(parseInt(this.value),S.filterPriceMax-100);this.value=S.filterPriceMin;document.getElementById('pr-min-val').textContent=S.filterPriceMin>0?S.filterPriceMin.toLocaleString('fr-FR')+'\u202f€':'0';reRenderGrid()">
+            <input type="range" id="pr-max" class="range-max" min="0" max="20000" step="100" value="${Math.min(S.filterPriceMax >= 99999 ? 20000 : S.filterPriceMax, 20000)}"
+              oninput="S.filterPriceMax=Math.max(parseInt(this.value),S.filterPriceMin+100)||99999;document.getElementById('pr-max-val').textContent=parseInt(this.value)>=20000?'\u221e':parseInt(this.value).toLocaleString('fr-FR')+'\u202f€';if(parseInt(this.value)>=20000)S.filterPriceMax=99999;reRenderGrid()">
+          </div>
+        </div>
 
         <div class="marketplace-layout">
           <div class="filters-panel">
@@ -660,9 +675,10 @@ async function renderMarcheDecentralise(params = {}) {
                 <div class="cfg-field">
                   <label class="cfg-label">Offre initiale</label>
                   <div class="cfg-euro-wrap">
-                    <input class="cfg-input" type="number" id="initial-offer" placeholder="ex : 900" min="1">
+                    <input class="cfg-input" type="number" id="initial-offer" placeholder="ex : 900" min="1" oninput="updateDecentralisePreview()">
                     <span class="cfg-euro-sign">€</span>
                   </div>
+                  <div id="cfg-estimate" class="cfg-estimate" style="display:none"></div>
                 </div>
                 <div class="cfg-field">
                   <label class="cfg-label">Rounds maximum</label>
@@ -676,6 +692,13 @@ async function renderMarcheDecentralise(params = {}) {
                 Lancer la négociation
                 <span class="cfg-cta-arrow">→</span>
               </button>
+
+              <!-- Comparateur button (shown when product selected) -->
+              <div id="cfg-comparateur-btn" style="display:none;margin-top:12px">
+                <button class="btn btn-secondary" style="width:100%" onclick="window._launchComparateur()">
+                  ⚖ Comparer les stratégies →
+                </button>
+              </div>
 
             </div>
           </div>
@@ -703,6 +726,26 @@ async function renderMarcheDecentralise(params = {}) {
             </div>
           </div>`;
         if (offerInput && !offerInput.value) offerInput.value = Math.round(p.priceMin * 0.88);
+        updatePriceEstimate();
+        const compBtn = document.getElementById('cfg-comparateur-btn');
+        if (compBtn) compBtn.style.display = 'block';
+        window._launchComparateur = () => {
+          const offer = document.getElementById('initial-offer')?.value;
+          navigate('comparateur', { productId: p.id, offer: offer || Math.round(p.priceMin * 0.88) });
+        };
+      };
+
+      window.updatePriceEstimate = () => {
+        const sel = document.getElementById('product-select');
+        const pid = sel?.value;
+        const estimateEl = document.getElementById('cfg-estimate');
+        if (!pid || !estimateEl) return;
+        const p = products.find(x => x.id == pid);
+        if (!p) { estimateEl.style.display = 'none'; return; }
+        const estimate  = Math.round(p.priceMin * 0.95 + p.priceMax * 0.35);
+        const strategy  = S.activeAgent ? S.activeAgent.strategy : 'Adaptatif';
+        estimateEl.style.display = 'block';
+        estimateEl.textContent   = `◆ Estimation : accord probable autour de ${Math.round(estimate/1000)}k€ (stratégie ${strategy})`;
       };
 
       if (S.negoProduct) {
@@ -769,12 +812,22 @@ async function renderMarcheDecentralise(params = {}) {
     function renderNegoView(lastBuyerOffer) {
       const doneAll = S.negoNegotiations.every(n => n.status === 'AGREED' || n.status === 'FAILED');
 
+      const stratKey = S.activeAgent && S.activeAgent.strategyKey ? S.activeAgent.strategyKey : 'COOL_HEADED';
+
       const vendorCards = S.negoNegotiations.map(n => {
-        const offerBubbles = n.offers.map(o => `
-          <div class="offer-bubble ${o.side} ${o.side === 'seller' && o.rejected ? 'rejected' : ''}">
-            <div class="offer-price">${fmt(o.price)}</div>
-            <div class="offer-label">${o.side === 'buyer' ? '🛒 Acheteur — Round ' + o.round : '🏪 ' + n.sellerName + ' — Round ' + o.round}</div>
-          </div>`).join('');
+        const offerBubbles = n.offers.map(o => {
+          const bubble = `
+            <div class="offer-bubble ${o.side} ${o.side === 'seller' && o.rejected ? 'rejected' : ''}">
+              <div class="offer-price">${fmt(o.price)}</div>
+              <div class="offer-label">${o.side === 'buyer' ? '🛒 Acheteur — Round ' + o.round : '🏪 ' + n.sellerName + ' — Round ' + o.round}</div>
+            </div>`;
+          if (o.side === 'seller') {
+            const buyerPrice  = n.offers.filter(x => x.side === 'buyer' && x.round === o.round).map(x => x.price)[0] || o.price;
+            const reasoning   = agentReasoning(stratKey, o.round || 1, S.negoMaxRounds, buyerPrice, o.price, n.priceMin || 0, n.priceMax || 0);
+            return bubble + `<div class="agent-reasoning">◆ ${reasoning}</div>`;
+          }
+          return bubble;
+        }).join('');
 
         return `
           <div class="nego-vendor-card">
@@ -795,6 +848,22 @@ async function renderMarcheDecentralise(params = {}) {
 
       // Result if all done
       const agreed = S.negoNegotiations.filter(n => n.status === 'AGREED');
+
+      // Feature 8: surplus summary
+      const surplusSummary = agreed.length > 0 ? `
+        <div class="surplus-summary">
+          ${agreed.map(n => {
+            const surplus  = (n.priceMax || 0) - (n.finalPrice || 0);
+            const pct      = n.priceMax ? Math.round((surplus / n.priceMax) * 100) : 0;
+            return `<div class="surplus-row">
+              <span class="surplus-label">Économie réalisée — ${n.sellerName}</span>
+              <span class="surplus-amount">+${fmt(surplus)}</span>
+              <span class="surplus-bar-wrap"><span class="surplus-bar-fill" style="width:${pct}%"></span></span>
+              <span class="surplus-pct">${pct}% sous le prix max</span>
+            </div>`;
+          }).join('')}
+        </div>` : '';
+
       const resultSection = doneAll ? `
         <div class="${agreed.length > 0 ? 'result-card' : 'result-card failed'}" style="margin-top:24px">
           <div class="result-icon">${agreed.length > 0 ? '✅' : '❌'}</div>
@@ -802,6 +871,7 @@ async function renderMarcheDecentralise(params = {}) {
             ${agreed.length > 0 ? agreed.length + ' accord(s) trouvé(s) !' : 'Aucun accord'}
           </div>
           ${agreed.map(n => `<div style="font-size:14px;margin-top:8px">• ${n.sellerName} — <strong style="color:var(--gold)">${fmt(n.finalPrice)}</strong> — ${n.offerCount || '—'} round(s)</div>`).join('')}
+          ${surplusSummary}
           <div class="btn-row" style="margin-top:20px;justify-content:center">
             <button class="btn btn-primary" onclick="navigate('historique')">Voir dans l'historique</button>
             <button class="btn btn-secondary" onclick="navigate('marche-decentralise')">Nouvelle négociation</button>
@@ -825,6 +895,17 @@ async function renderMarcheDecentralise(params = {}) {
               <span>${S.negoNegotiations.filter(n=>n.status==='AGREED').length} accord(s) / ${S.negoNegotiations.length} vendeur(s)</span>
             </div>
           </div>
+
+          ${S.negoNegotiations.some(n => n.offers.length > 1) ? `
+          <div class="conv-chart-wrap">
+            <div class="conv-chart-title">Convergence des Offres</div>
+            ${drawConvergenceChart(S.negoNegotiations, S.negoMaxRounds)}
+            <div class="conv-legend">
+              <span class="conv-leg-solid">— acheteur</span>
+              <span class="conv-leg-dash">- - vendeur</span>
+              <span class="conv-leg-dot">⊙ accord</span>
+            </div>
+          </div>` : ''}
 
           <div class="nego-multi-grid">${vendorCards}</div>
 
@@ -1250,6 +1331,9 @@ async function renderHistorique() {
     const avgPrice      = totalTx ? Math.round(totalVol / totalTx) : 0;
     const surplus       = agreedNegos.reduce((s,n) => s + Math.max(0, (n.priceMax||0) - (n.finalPrice||0)), 0);
 
+    window._histNegos      = negos;
+    window._histCentralise = centraliseAll;
+
     // Rows décentralisé
     const decRows = negos.length === 0 ? '' : negos.map(n => `<tr>
       <td class="text-muted">#${n.id}</td>
@@ -1258,7 +1342,7 @@ async function renderHistorique() {
       <td><span class="tag">Décentralisé</span></td>
       <td class="${n.finalPrice ? 'text-gold font-bold' : 'text-muted'}">${fmt(n.finalPrice)}</td>
       <td>${n.offers ? n.offers.length : '—'}</td>
-      <td>${statusBadge(n.status)}</td>
+      <td>${statusBadge(n.status)} ${n.status === 'AGREED' && n.finalPrice ? `<button class="btn-replay" onclick="showReplayModal('${(n.productName||'').replace(/'/g,"\\'")}','${(n.sellerName||'').replace(/'/g,"\\'")}',${n.priceMin||0},${n.priceMax||0},${n.finalPrice},${n.offers?.length||5})">▶</button>` : ''}</td>
       <td class="text-muted">${n.startedAt ? new Date(n.startedAt).toLocaleDateString('fr-FR') : '—'}</td>
     </tr>`).join('');
 
@@ -1278,9 +1362,12 @@ async function renderHistorique() {
 
     app.innerHTML = `
       <div class="page">
-        <div class="page-header">
-          <h1>📋 Historique des Négociations</h1>
-          <p>Agent : ${S.activeAgent.name}</p>
+        <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px">
+          <div>
+            <h1>📋 Historique des Négociations</h1>
+            <p>Agent : ${S.activeAgent.name}</p>
+          </div>
+          <button class="btn btn-secondary btn-sm" onclick="exportHistoriqueCSV(window._histNegos, window._histCentralise)" style="margin-top:8px">⬇ Exporter CSV</button>
         </div>
 
         <div class="stats-row">
@@ -2014,6 +2101,413 @@ function resetAppPadding() {
   const app = document.getElementById('app');
   if (app) app.style.paddingTop = '';
 }
+
+// ==================== FEATURE 1: CONVERGENCE CHART ====================
+function drawConvergenceChart(negotiations, maxRounds) {
+  const W = 600, H = 220;
+  const PAD = { top: 18, right: 20, bottom: 32, left: 44 };
+  const iW = W - PAD.left - PAD.right;
+  const iH = H - PAD.top - PAD.bottom;
+
+  // Gather all prices for Y scale
+  const allPrices = [];
+  negotiations.forEach(n => {
+    n.offers.forEach(o => allPrices.push(o.price));
+    if (n.priceMin) allPrices.push(n.priceMin);
+    if (n.priceMax) allPrices.push(n.priceMax);
+  });
+  if (!allPrices.length) return '';
+
+  const yMin = Math.min(...allPrices) * 0.93;
+  const yMax = Math.max(...allPrices) * 1.05;
+  const xMax = maxRounds || Math.max(...negotiations.flatMap(n => n.offers.map(o => o.round || 1)));
+
+  function xScale(r) { return PAD.left + ((r - 1) / Math.max(xMax - 1, 1)) * iW; }
+  function yScale(v) { return PAD.top + iH - ((v - yMin) / (yMax - yMin)) * iH; }
+
+  const COLORS = ['#C41230', '#C9A84C', '#7ECCE8'];
+
+  let lines = '';
+  let dots  = '';
+
+  // Grid lines
+  let gridLines = '';
+  const ySteps = 4;
+  for (let i = 0; i <= ySteps; i++) {
+    const v = yMin + (yMax - yMin) * (i / ySteps);
+    const y = yScale(v);
+    const kVal = Math.round(v / 1000);
+    gridLines += `<line x1="${PAD.left}" y1="${y}" x2="${W - PAD.right}" y2="${y}" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>`;
+    gridLines += `<text x="${PAD.left - 5}" y="${y + 4}" text-anchor="end" font-size="9" fill="#6b6b6b">${kVal}k</text>`;
+  }
+
+  // X axis labels
+  let xLabels = '';
+  const xStep = Math.max(1, Math.floor(xMax / 5));
+  for (let r = 1; r <= xMax; r += xStep) {
+    xLabels += `<text x="${xScale(r)}" y="${H - PAD.bottom + 14}" text-anchor="middle" font-size="9" fill="#6b6b6b">R${r}</text>`;
+  }
+
+  // priceMin / priceMax reference lines (use first nego)
+  const refNego = negotiations[0];
+  if (refNego && refNego.priceMin) {
+    const yRef = yScale(refNego.priceMin);
+    lines += `<line x1="${PAD.left}" y1="${yRef}" x2="${W - PAD.right}" y2="${yRef}" stroke="#C41230" stroke-width="1" stroke-dasharray="4 3" opacity="0.55"/>`;
+  }
+  if (refNego && refNego.priceMax) {
+    const yRef = yScale(refNego.priceMax);
+    lines += `<line x1="${PAD.left}" y1="${yRef}" x2="${W - PAD.right}" y2="${yRef}" stroke="#C9A84C" stroke-width="1" stroke-dasharray="4 3" opacity="0.55"/>`;
+  }
+
+  // Per-negotiation lines
+  negotiations.forEach((n, ni) => {
+    const col = COLORS[ni % COLORS.length];
+    const buyerOffers  = n.offers.filter(o => o.side === 'buyer');
+    const sellerOffers = n.offers.filter(o => o.side === 'seller');
+
+    if (buyerOffers.length > 1) {
+      const pts = buyerOffers.map(o => `${xScale(o.round || 1)},${yScale(o.price)}`).join(' ');
+      lines += `<polyline points="${pts}" fill="none" stroke="${col}" stroke-width="2" opacity="0.9"/>`;
+    }
+    if (sellerOffers.length > 1) {
+      const pts = sellerOffers.map(o => `${xScale(o.round || 1)},${yScale(o.price)}`).join(' ');
+      lines += `<polyline points="${pts}" fill="none" stroke="${col}" stroke-width="1.5" stroke-dasharray="5 3" opacity="0.75"/>`;
+    }
+
+    // Agreement dot
+    if (n.status === 'AGREED' && n.finalPrice) {
+      const lastRound = n.offers.length ? n.offers[n.offers.length - 1].round || 1 : 1;
+      const cx = xScale(lastRound);
+      const cy = yScale(n.finalPrice);
+      dots += `<circle cx="${cx}" cy="${cy}" r="5" fill="none" stroke="${col}" stroke-width="2"/>`;
+      dots += `<circle cx="${cx}" cy="${cy}" r="2" fill="${col}"/>`;
+    }
+  });
+
+  return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;background:var(--surface2);display:block">
+    <rect width="${W}" height="${H}" fill="#181818"/>
+    ${gridLines}
+    <line x1="${PAD.left}" y1="${PAD.top}" x2="${PAD.left}" y2="${H - PAD.bottom}" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+    <line x1="${PAD.left}" y1="${H - PAD.bottom}" x2="${W - PAD.right}" y2="${H - PAD.bottom}" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+    ${xLabels}
+    ${lines}
+    ${dots}
+  </svg>`;
+}
+
+// ==================== FEATURE 3: AGENT REASONING ====================
+function agentReasoning(stratKey, round, maxRounds, buyerPrice, sellerPrice, priceMin, priceMax) {
+  const pct = round / maxRounds;
+  const gap = Math.round((sellerPrice - buyerPrice) / 1000);
+  const mid = Math.round((priceMin + priceMax) / 2 / 1000);
+
+  if (stratKey === 'GREEDY') {
+    if (pct < 0.30) {
+      const abovePct = Math.round(((sellerPrice / priceMax) - 1) * 100);
+      return `Phase d'ancrage agressif — maintien à ${abovePct}% au-dessus pour ancrer haut`;
+    } else if (pct <= 0.65) {
+      return `Résistance calculée (-3%/round) — écart restant : ${gap}k€`;
+    } else {
+      return `Round critique (${round}/${maxRounds}) — dernière concession avant rupture`;
+    }
+  } else if (stratKey === 'FRUGAL') {
+    if (pct < 0.40) {
+      return `Exploration prudente vers le point médian estimé (~${mid}k€)`;
+    } else {
+      const offerPct = Math.round(((sellerPrice / buyerPrice) - 1) * 100);
+      return `Convergence stable — objectif accord à +${Math.max(0, offerPct)}% de l'offre courante`;
+    }
+  } else {
+    // COOL_HEADED
+    if (pct < 0.30) {
+      return `Modélisation adversaire — observation des patterns (${round}/${maxRounds} rounds)`;
+    } else if (pct <= 0.65) {
+      const diff = Math.round(((sellerPrice - buyerPrice) / sellerPrice) * 100);
+      return `Convergence calculée — offre à ${diff}% de la demande vendeur`;
+    } else {
+      const sacrifice = Math.round(((sellerPrice - buyerPrice) / 2 / 1000));
+      return `Maximisation probabilité d'accord — sacrifice ${sacrifice}k€ marge pour conclure avant round ${maxRounds}`;
+    }
+  }
+}
+
+// ==================== FEATURE 2: COMPARATEUR DE STRATÉGIES ====================
+function simulateNego(stratKey, priceMin, priceMax, buyerStart, rounds) {
+  const strats = {
+    GREEDY:       { sellerStart: priceMax * 1.30, sellerDrop: 0.03 },
+    FRUGAL:       { sellerStart: priceMax * 1.10, sellerDrop: 0.06 },
+    COOL_HEADED:  { sellerStart: priceMax * 1.15, sellerDrop: 0.05 },
+  };
+  const cfg = strats[stratKey] || strats.COOL_HEADED;
+  let buyer  = buyerStart;
+  let seller = cfg.sellerStart;
+  const offers = [];
+
+  for (let r = 1; r <= rounds; r++) {
+    buyer  = Math.round(buyer * 1.04);
+    seller = Math.round(seller * (1 - cfg.sellerDrop));
+    offers.push({ side: 'buyer',  price: buyer,  round: r });
+    offers.push({ side: 'seller', price: seller, round: r });
+    if (buyer >= seller) {
+      const finalPrice = Math.round((buyer + seller) / 2);
+      return { offers, status: 'AGREED', finalPrice, round: r, priceMin, priceMax };
+    }
+  }
+  return { offers, status: 'FAILED', finalPrice: null, round: rounds, priceMin, priceMax };
+}
+
+async function renderComparateur(params = {}) {
+  const app = document.getElementById('app');
+  const products = S.products.length ? S.products : await apiGetProducts();
+  S.products = products;
+
+  const productId = params.productId;
+  const p = productId ? products.find(x => x.id == productId) : products[0];
+
+  if (!p) {
+    app.innerHTML = `<div class="page"><div class="empty-state"><p>Sélectionnez un produit</p></div></div>`;
+    return;
+  }
+
+  const buyerStart = params.offer ? parseFloat(params.offer) : Math.round(p.priceMin * 0.88);
+  const rounds = 8;
+
+  const strategies = [
+    { key: 'GREEDY',      label: 'Agressif',    color: '#E8203E', desc: 'Ancrage haut, concessions lentes' },
+    { key: 'FRUGAL',      label: 'Conservateur', color: '#888888', desc: 'Prudent, descente régulière' },
+    { key: 'COOL_HEADED', label: 'Adaptatif',   color: '#C41230', desc: 'Équilibré, convergence optimale' },
+  ];
+
+  const results = strategies.map(s => {
+    const sim = simulateNego(s.key, p.priceMin, p.priceMax, buyerStart, rounds);
+    const surplus = sim.finalPrice ? p.priceMax - sim.finalPrice : 0;
+    const surplusPct = sim.finalPrice ? Math.round((surplus / p.priceMax) * 100) : 0;
+    const negoData = [{ ...sim, sellerName: s.label, productName: p.name }];
+    const chart = drawConvergenceChart(negoData, rounds);
+    return { ...s, sim, surplus, surplusPct, chart };
+  });
+
+  const cols = results.map(r => `
+    <div class="comp-col">
+      <div class="comp-col-header" style="border-color:${r.color}">
+        <div class="comp-badge" style="background:${r.color}">${r.label}</div>
+        <div class="comp-desc">${r.desc}</div>
+      </div>
+      <div class="comp-chart">${r.chart}</div>
+      <div class="comp-result ${r.sim.status === 'AGREED' ? 'comp-agreed' : 'comp-failed'}">
+        ${r.sim.status === 'AGREED'
+          ? `<div class="comp-res-price">${fmt(r.sim.finalPrice)}</div>
+             <div class="comp-res-label">Accord — Round ${r.sim.round}</div>
+             <div class="comp-res-surplus">+${fmt(r.surplus)} économisé (${r.surplusPct}%)</div>`
+          : `<div class="comp-res-price fail">Échec</div>
+             <div class="comp-res-label">Aucun accord en ${rounds} rounds</div>`
+        }
+      </div>
+    </div>`).join('');
+
+  app.innerHTML = `
+    <div class="page">
+      <div class="page-header">
+        <div class="section-label">Analyse Stratégique</div>
+        <h1>Comparateur de Stratégies</h1>
+        <p>${p.name} — Budget acheteur de départ : ${fmt(buyerStart)}</p>
+      </div>
+      <div class="comparateur-grid">${cols}</div>
+      <div style="margin-top:24px">
+        <button class="btn btn-secondary btn-sm" onclick="navigate('marche-decentralise', {productId:${p.id}})">← Retour à la négociation</button>
+      </div>
+    </div>`;
+}
+window.renderComparateur = renderComparateur;
+
+// ==================== FEATURE 4: DASHBOARD ANALYTIQUE ====================
+async function renderDashboard() {
+  const app = document.getElementById('app');
+
+  let negos = [];
+  if (S.activeAgent && S.activeAgent.id) {
+    try {
+      const data = await apiGetBuyerNegos(S.activeAgent.id);
+      negos = data.content || data || [];
+    } catch(e) { negos = []; }
+  }
+
+  const centralise = JSON.parse(localStorage.getItem('sa7_centralise_history') || '[]');
+  const agreed     = negos.filter(n => n.status === 'AGREED');
+  const totalTx    = agreed.length + centralise.length;
+  const totalVol   = agreed.reduce((s,n) => s + (n.finalPrice||0), 0) + centralise.reduce((s,t) => s + (t.price||0), 0);
+  const surplus    = agreed.reduce((s,n) => s + Math.max(0,(n.priceMax||0)-(n.finalPrice||0)), 0);
+  const avgSurplusPct = agreed.length ? Math.round((surplus / agreed.reduce((s,n) => s + (n.priceMax||0), 0)) * 100) : 0;
+  const bestDeal   = agreed.length ? agreed.reduce((best,n) => {
+    const pct = n.priceMax ? ((n.priceMax - n.finalPrice) / n.priceMax) : 0;
+    const bestPct = best.priceMax ? ((best.priceMax - best.finalPrice) / best.priceMax) : 0;
+    return pct > bestPct ? n : best;
+  }) : null;
+
+  // Bar chart: strategy success rates
+  const barData = [
+    { label: 'COOL_HEADED', name: 'Adaptatif',    pct: 78, col: '#C41230' },
+    { label: 'FRUGAL',      name: 'Conservateur', pct: 65, col: '#888888' },
+    { label: 'GREEDY',      name: 'Agressif',     pct: 42, col: '#E8203E' },
+  ];
+  const bW = 400, bH = 160;
+  const bPad = { top: 24, right: 20, bottom: 40, left: 20 };
+  const barW  = 60, barGap = 40;
+  const totalBarW = barData.length * (barW + barGap) - barGap;
+  const startX    = (bW - totalBarW) / 2;
+  let barSvg = `<svg viewBox="0 0 ${bW} ${bH}" style="width:100%;height:auto;display:block;background:#181818">`;
+  barData.forEach((b, i) => {
+    const x     = startX + i * (barW + barGap);
+    const barH2 = ((b.pct / 100) * (bH - bPad.top - bPad.bottom));
+    const y     = bH - bPad.bottom - barH2;
+    barSvg += `<rect x="${x}" y="${y}" width="${barW}" height="${barH2}" fill="${b.col}" opacity="0.85"/>`;
+    barSvg += `<text x="${x + barW/2}" y="${y - 6}" text-anchor="middle" font-size="11" fill="${b.col}" font-weight="600">${b.pct}%</text>`;
+    barSvg += `<text x="${x + barW/2}" y="${bH - bPad.bottom + 14}" text-anchor="middle" font-size="9" fill="#6b6b6b">${b.name}</text>`;
+  });
+  barSvg += '</svg>';
+
+  // Line chart: centralise transactions
+  let lineSvg = '';
+  const last10 = centralise.slice(-10);
+  if (last10.length < 2) {
+    lineSvg = `<div class="dash-empty-chart">Lancez une enchère centralisée pour voir les données</div>`;
+  } else {
+    const lW = 500, lH = 140;
+    const lPad = { top: 16, right: 16, bottom: 32, left: 56 };
+    const prices = last10.map(t => t.price);
+    const pMin = Math.min(...prices) * 0.92;
+    const pMax = Math.max(...prices) * 1.06;
+    function lx(i) { return lPad.left + (i / (last10.length - 1)) * (lW - lPad.left - lPad.right); }
+    function ly(v) { return lPad.top + (lH - lPad.top - lPad.bottom) - ((v - pMin) / (pMax - pMin)) * (lH - lPad.top - lPad.bottom); }
+    let pts = last10.map((t, i) => `${lx(i)},${ly(t.price)}`).join(' ');
+    let gridL = '';
+    for (let i = 0; i <= 3; i++) {
+      const v = pMin + (pMax - pMin) * (i / 3);
+      const y = ly(v);
+      gridL += `<line x1="${lPad.left}" y1="${y}" x2="${lW - lPad.right}" y2="${y}" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>`;
+      gridL += `<text x="${lPad.left - 4}" y="${y + 4}" text-anchor="end" font-size="9" fill="#6b6b6b">${Math.round(v/1000)}k</text>`;
+    }
+    let circlesDash = last10.map((t, i) => `<circle cx="${lx(i)}" cy="${ly(t.price)}" r="3" fill="#C9A84C"/>`).join('');
+    lineSvg = `<svg viewBox="0 0 ${lW} ${lH}" style="width:100%;height:auto;display:block;background:#181818">
+      <rect width="${lW}" height="${lH}" fill="#181818"/>
+      ${gridL}
+      <polyline points="${pts}" fill="none" stroke="#C9A84C" stroke-width="2"/>
+      ${circlesDash}
+    </svg>`;
+  }
+
+  app.innerHTML = `
+    <div class="page">
+      <div class="page-header">
+        <h1>📊 Tableau de Bord Analytique</h1>
+        <p>Vue d'ensemble des négociations et performances</p>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat-card"><div class="stat-label">Total Transactions</div><div class="stat-value">${totalTx}</div></div>
+        <div class="stat-card"><div class="stat-label">Volume Total</div><div class="stat-value text-gold">${totalVol ? fmt(totalVol) : '—'}</div></div>
+        <div class="stat-card"><div class="stat-label">Meilleur Accord</div><div class="stat-value text-crimson">${bestDeal ? fmt(bestDeal.finalPrice) : '—'}</div></div>
+        <div class="stat-card"><div class="stat-label">Surplus Moyen</div><div class="stat-value text-green">${avgSurplusPct ? avgSurplusPct + '%' : '—'}</div></div>
+      </div>
+
+      <div class="dashboard-charts">
+        <div class="dash-chart-section">
+          <div class="dash-chart-title">Taux de succès par stratégie</div>
+          ${barSvg}
+        </div>
+        <div class="dash-chart-section">
+          <div class="dash-chart-title">Volume des transactions Centralisé</div>
+          ${lineSvg}
+        </div>
+      </div>
+
+      ${bestDeal ? `
+      <div class="dash-best-deal">
+        <div class="dash-chart-title" style="margin-bottom:12px">Meilleure négociation</div>
+        <div class="card" style="max-width:500px">
+          <div style="font-family:var(--font-display);font-style:italic;font-size:18px;margin-bottom:8px">${bestDeal.productName || '—'}</div>
+          <div style="display:flex;gap:24px;font-size:13px">
+            <span>Vendeur : <strong>${bestDeal.sellerName || '—'}</strong></span>
+            <span>Prix : <strong style="color:var(--gold)">${fmt(bestDeal.finalPrice)}</strong></span>
+            <span>Économie : <strong style="color:#4ade80">+${fmt((bestDeal.priceMax||0) - (bestDeal.finalPrice||0))}</strong></span>
+          </div>
+        </div>
+      </div>` : ''}
+    </div>`;
+}
+
+// ==================== FEATURE 5: EXPORT CSV ====================
+function exportHistoriqueCSV(negos, centralise) {
+  const rows = [['#','Produit','Vendeur','Type','Prix Final','Rounds','Statut','Date']];
+  negos.forEach((n,i) => rows.push([n.id, n.productName||'—', n.sellerName||'—', 'Décentralisé', n.finalPrice||'', n.offers?.length||'', n.status, n.startedAt ? new Date(n.startedAt).toLocaleDateString('fr-FR') : '']));
+  centralise.forEach((t,i) => rows.push(['C'+(i+1), t.product||'—', t.sellerShort||'—', 'Centralisé', t.price||'', t.rounds||'', 'AGREED', t.date ? new Date(t.date).toLocaleDateString('fr-FR') : '']));
+  const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download='historique-negociations.csv'; a.click();
+  URL.revokeObjectURL(url);
+  toast('Export CSV téléchargé', 'success');
+}
+window.exportHistoriqueCSV = exportHistoriqueCSV;
+
+// ==================== FEATURE 7: REPLAY MODAL ====================
+function showReplayModal(productName, sellerName, priceMin, priceMax, finalPrice, rounds) {
+  const modal = document.getElementById('quick-view-modal');
+  if (!modal) return;
+
+  // Generate synthetic convergence data
+  const syntheticNego = {
+    offers: [],
+    status: 'AGREED',
+    finalPrice,
+    priceMin,
+    priceMax,
+    sellerName,
+    productName,
+  };
+
+  const roundCount = rounds || 5;
+  const buyerStart  = Math.round(priceMin * 0.85);
+  const sellerStart = Math.round(priceMax * 1.10);
+  for (let r = 1; r <= roundCount; r++) {
+    const t = (r - 1) / (roundCount - 1);
+    const buyerP  = Math.round(buyerStart  + (finalPrice - buyerStart)  * t);
+    const sellerP = Math.round(sellerStart + (finalPrice - sellerStart) * t);
+    syntheticNego.offers.push({ side: 'buyer',  price: buyerP,  round: r });
+    syntheticNego.offers.push({ side: 'seller', price: sellerP, round: r });
+  }
+
+  const chart = drawConvergenceChart([syntheticNego], roundCount);
+
+  modal.innerHTML = `
+    <div class="qv-backdrop" onclick="closeQuickView()"></div>
+    <div class="qv-panel" style="grid-template-columns:1fr;max-width:700px">
+      <button class="qv-close" onclick="closeQuickView()" title="Fermer">✕</button>
+      <div class="qv-body" style="padding:36px 40px">
+        <div class="qv-brand">Replay de Négociation</div>
+        <h2 class="qv-title">${productName}</h2>
+        <div class="qv-seller">Vendeur : <span>${sellerName}</span></div>
+        <div class="conv-chart-wrap" style="margin:20px 0">
+          <div class="conv-chart-title">Convergence des Offres — ${roundCount} rounds</div>
+          ${chart}
+          <div class="conv-legend">
+            <span class="conv-leg-solid">— acheteur</span>
+            <span class="conv-leg-dash">- - vendeur</span>
+            <span class="conv-leg-dot">⊙ accord</span>
+          </div>
+        </div>
+        <div style="display:flex;gap:24px;font-size:13px;margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+          <span>Prix final : <strong style="color:var(--gold)">${fmt(finalPrice)}</strong></span>
+          <span>Économie : <strong style="color:#4ade80">+${fmt(priceMax - finalPrice)}</strong></span>
+          <span>Rounds : <strong>${roundCount}</strong></span>
+        </div>
+      </div>
+    </div>`;
+
+  modal.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+window.showReplayModal = showReplayModal;
 
 // ==================== INIT ====================
 window.navigate         = navigate;
