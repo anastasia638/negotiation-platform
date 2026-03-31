@@ -46,6 +46,11 @@ public class FrugalStrategy implements NegotiationStrategy {
                 range.multiply(BigDecimal.valueOf(counterRatio))
         ).setScale(2, RoundingMode.HALF_UP);
 
+        // Si la contre-offre est <= au prix proposé, accepter directement
+        if (counterPrice.compareTo(offeredPrice) <= 0) {
+            return StrategyDecision.accept();
+        }
+
         return StrategyDecision.counter(counterPrice);
     }
 }

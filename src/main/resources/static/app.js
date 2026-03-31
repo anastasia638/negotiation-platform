@@ -622,15 +622,17 @@ async function renderMarcheDecentralise(params = {}) {
     S.negoProduct = params.productId ? products.find(p => p.id == params.productId) : null;
 
     function renderSetup() {
-      const productOptions = products.map(p =>
-        `<option value="${p.id}" ${S.negoProduct && S.negoProduct.id == p.id ? 'selected' : ''}>
-          ${p.name} — ${p.brand || ''} (${fmt(p.priceMin)} - ${fmt(p.priceMax)})
-        </option>`).join('');
+      const catMeta = {
+        bags:     { icon: '👜', label: 'Sacs' },
+        watches:  { icon: '⌚', label: 'Montres' },
+        clothing: { icon: '👗', label: 'Vêtements' },
+        perfumes: { icon: '🌸', label: 'Parfums' },
+        shoes:    { icon: '👠', label: 'Chaussures' }
+      };
+      const categories = [...new Set(products.map(p => p.category))];
 
       app.innerHTML = `
         <div class="cfg-wrap">
-
-          <!-- Hero cinématique -->
           <div class="cfg-hero">
             <div class="cfg-hero-bg" style="background-image:url('${HERO_IMAGES[2]}')"></div>
             <div class="cfg-hero-veil"></div>
@@ -643,12 +645,8 @@ async function renderMarcheDecentralise(params = {}) {
             <div class="cfg-deco cfg-d2">◇</div>
             <div class="cfg-deco cfg-d3">◆</div>
           </div>
-
-          <!-- Card centrée -->
           <div class="cfg-body">
             <div class="cfg-card">
-
-              <!-- Agent actif -->
               <div class="cfg-agent-row">
                 <div class="cfg-agent-dot-wrap"><span class="agent-dot"></span></div>
                 <div class="cfg-agent-info">
@@ -657,20 +655,17 @@ async function renderMarcheDecentralise(params = {}) {
                 </div>
                 <div class="cfg-strategy-badge cfg-strat-${(S.activeAgent.strategyKey||'').toLowerCase()}">${S.activeAgent.strategy}</div>
               </div>
-
               <div class="cfg-sep"></div>
-
-              <!-- Produit -->
               <div class="cfg-field">
-                <label class="cfg-label">Article à négocier</label>
-                <select class="cfg-select" id="product-select" onchange="updateDecentralisePreview()">
-                  <option value="">— Sélectionner un article —</option>
-                  ${productOptions}
-                </select>
-                <div id="cfg-product-preview" class="cfg-product-preview" style="display:none"></div>
+                <label class="cfg-label">Catégorie</label>
+                <div class="cat-chips" id="cat-chips">
+                  ${categories.map(c => `<button class="cat-chip ${c === (S.negoProduct?.category || categories[0]) ? 'active' : ''}" onclick="selectCat('${c}')">${catMeta[c]?.icon || '◆'} ${catMeta[c]?.label || c}</button>`).join('')}
+                </div>
               </div>
-
-              <!-- Offre + Rounds -->
+              <div class="cfg-field">
+                <label class="cfg-label">Article <span id="cat-count" style="color:var(--text3);font-size:11px;font-weight:400;letter-spacing:0"></span></label>
+                <div class="product-carousel" id="product-carousel"></div>
+              </div>
               <div class="cfg-two-col">
                 <div class="cfg-field">
                   <label class="cfg-label">Offre initiale</label>
@@ -685,51 +680,66 @@ async function renderMarcheDecentralise(params = {}) {
                   <input class="cfg-input" type="number" id="max-rounds" value="${S.negoMaxRounds}" min="1" max="20">
                 </div>
               </div>
-
-              <!-- CTA -->
+              <div class="cfg-info-box">
+                <span class="cfg-info-icon">ℹ</span>
+                <span>Le système négocie simultanément avec <strong>tous les vendeurs</strong> de la catégorie — mettez-les en concurrence pour le meilleur prix.</span>
+              </div>
               <button class="cfg-cta" onclick="startDecentralise()">
                 <span class="cfg-cta-gem">◆</span>
                 Lancer la négociation
                 <span class="cfg-cta-arrow">→</span>
               </button>
-
-              <!-- Comparateur button (shown when product selected) -->
               <div id="cfg-comparateur-btn" style="display:none;margin-top:12px">
-                <button class="btn btn-secondary" style="width:100%" onclick="window._launchComparateur()">
-                  ⚖ Comparer les stratégies →
-                </button>
+                <button class="btn btn-secondary" style="width:100%" onclick="window._launchComparateur && window._launchComparateur()">⚖ Comparer les stratégies →</button>
               </div>
-
             </div>
           </div>
         </div>`;
 
-      window.updateDecentralisePreview = () => {
-        const sel = document.getElementById('product-select');
-        const pid = sel?.value;
-        const preview = document.getElementById('cfg-product-preview');
-        const offerInput = document.getElementById('initial-offer');
-        if (!pid || !preview) return;
-        const p = products.find(x => x.id == pid);
-        if (!p) { preview.style.display = 'none'; return; }
-        const img = getProductImage(p);
-        preview.style.display = 'flex';
-        preview.innerHTML = `
-          <div class="cfg-preview-img" style="background-image:url('${img}')"></div>
-          <div class="cfg-preview-info">
-            <div class="cfg-preview-brand">${p.brand || p.category}</div>
-            <div class="cfg-preview-name">${p.name}</div>
-            <div class="cfg-preview-range">
-              <span>Min <strong>${fmt(p.priceMin)}</strong></span>
-              <span class="cfg-preview-sep">·</span>
-              <span>Max <strong style="color:var(--gold)">${fmt(p.priceMax)}</strong></span>
+      window.selectCat = (cat) => {
+        document.querySelectorAll('.cat-chip').forEach(c =>
+          c.classList.toggle('active', c.textContent.trim().startsWith(catMeta[cat]?.icon || cat))
+        );
+        const catProds = products.filter(p => p.category === cat);
+        const countEl = document.getElementById('cat-count');
+        if (countEl) countEl.textContent = `(${catProds.length} article${catProds.length > 1 ? 's' : ''})`;
+        const carousel = document.getElementById('product-carousel');
+        if (!carousel) return;
+
+        // Build cards once, duplicate for infinite loop (like the ticker)
+        const makeCard = (p, withId) => `
+          <div class="pcarousel-card ${S.negoProduct?.id == p.id ? 'pcarousel-selected' : ''}"
+               onclick="selectProduct(${p.id})"
+               data-pid="${p.id}"
+               ${withId ? `id="pc-${p.id}"` : ''}>
+            <div class="pcarousel-img" style="background-image:url('${getProductImage(p)}')"></div>
+            <div class="pcarousel-body">
+              <div class="pcarousel-brand">${p.brand || cat}</div>
+              <div class="pcarousel-name">${p.name}</div>
+              <div class="pcarousel-range">${fmt(p.priceMin)} — ${fmt(p.priceMax)}</div>
             </div>
+            <div class="pcarousel-check">✓</div>
           </div>`;
-        if (offerInput && !offerInput.value) {
-          const suggested = Math.round(p.priceMax * 0.78);
-          offerInput.value = suggested.toLocaleString('fr-FR');
+
+        const cards     = catProds.map(p => makeCard(p, true)).join('');
+        const cardsDupe = catProds.map(p => makeCard(p, false)).join('');
+        // Adjust speed: more cards = slower scroll
+        const duration = Math.max(18, catProds.length * 4);
+        carousel.innerHTML = `<div class="pcarousel-track" style="animation-duration:${duration}s">${cards}${cardsDupe}</div>`;
+      };
+
+      window.selectProduct = (pid) => {
+        const p = products.find(x => x.id == pid);
+        if (!p) return;
+        S.negoProduct = p;
+        // Update all copies (original + duplicate in infinite loop)
+        document.querySelectorAll('.pcarousel-card').forEach(c => c.classList.remove('pcarousel-selected'));
+        document.querySelectorAll(`[data-pid="${pid}"]`).forEach(c => c.classList.add('pcarousel-selected'));
+        const offerInput = document.getElementById('initial-offer');
+        if (offerInput) {
+          offerInput.value = Math.round(p.priceMax * 0.78).toLocaleString('fr-FR');
+          updatePriceEstimate();
         }
-        updatePriceEstimate();
         const compBtn = document.getElementById('cfg-comparateur-btn');
         if (compBtn) compBtn.style.display = 'block';
         window._launchComparateur = () => {
@@ -739,63 +749,50 @@ async function renderMarcheDecentralise(params = {}) {
       };
 
       window.updatePriceEstimate = () => {
-        const sel = document.getElementById('product-select');
-        const pid = sel?.value;
+        if (!S.negoProduct) return;
+        const p = S.negoProduct;
         const estimateEl = document.getElementById('cfg-estimate');
         if (!estimateEl) return;
-        if (!pid) { estimateEl.style.display = 'none'; return; }
-        const p = products.find(x => x.id == pid);
-        if (!p) { estimateEl.style.display = 'none'; return; }
-
-        const userOffer  = parseFloat(document.getElementById('initial-offer')?.value) || 0;
-        const goodOffer  = Math.round(p.priceMax * 0.78);   // zone idéale = ~78% du max
-        const estimate   = Math.round(p.priceMin * 0.95 + p.priceMax * 0.35);
-        const strategy   = S.activeAgent ? S.activeAgent.strategy : 'Adaptatif';
-        const pct        = userOffer > 0 ? Math.round((userOffer / p.priceMax) * 100) : null;
-
+        const userOffer = parseFloat(String(document.getElementById('initial-offer')?.value || '0').replace(/\s/g,'').replace(',','.')) || 0;
+        const goodOffer = Math.round(p.priceMax * 0.78);
+        const estimate  = Math.round(p.priceMin * 0.95 + p.priceMax * 0.35);
+        const strategy  = S.activeAgent ? S.activeAgent.strategy : 'Adaptatif';
+        const pct       = userOffer > 0 ? Math.round((userOffer / p.priceMax) * 100) : null;
         estimateEl.style.display = 'block';
-
-        // Alerte si offre trop basse
         if (userOffer > 0 && userOffer < p.priceMin * 0.6) {
-          estimateEl.innerHTML = `⚠️ Offre trop basse (${pct}% du max) — le vendeur refusera.
-            Recommandé : <strong>${goodOffer.toLocaleString('fr-FR')} €</strong> (78% du max)`;
+          estimateEl.innerHTML = `⚠️ Offre trop basse (${pct}% du max) — refus probable. Recommandé : <strong>${goodOffer.toLocaleString('fr-FR')} €</strong>`;
           estimateEl.style.borderLeftColor = 'var(--crimson)';
-          estimateEl.style.background      = 'rgba(196,18,48,0.08)';
-          estimateEl.style.color           = 'var(--crimson2)';
+          estimateEl.style.background = 'rgba(196,18,48,0.08)';
+          estimateEl.style.color = 'var(--crimson2)';
         } else if (userOffer > 0 && userOffer < p.priceMin) {
-          estimateEl.innerHTML = `⚠️ Offre inférieure au prix minimum (${fmt(p.priceMin)}) — risque d'échec.
-            Zone recommandée : ${fmt(Math.round(p.priceMin * 0.85))} — ${fmt(goodOffer)}`;
+          estimateEl.innerHTML = `⚠️ Offre inférieure au minimum (${fmt(p.priceMin)}) — risque d'échec.`;
           estimateEl.style.borderLeftColor = '#C9A84C';
-          estimateEl.style.background      = 'rgba(201,168,76,0.08)';
-          estimateEl.style.color           = 'var(--gold)';
+          estimateEl.style.background = 'rgba(201,168,76,0.08)';
+          estimateEl.style.color = 'var(--gold)';
         } else {
           const pctStr = pct !== null ? ` (${pct}% du max)` : '';
-          estimateEl.innerHTML = `◆ Accord probable autour de <strong>${estimate.toLocaleString('fr-FR')} €</strong>${pctStr} · stratégie ${strategy}`;
+          estimateEl.innerHTML = `◆ Accord probable autour de <strong>${estimate.toLocaleString('fr-FR')} €</strong>${pctStr} · ${strategy}`;
           estimateEl.style.borderLeftColor = 'var(--gold)';
-          estimateEl.style.background      = 'var(--gold-dim)';
-          estimateEl.style.color           = 'var(--gold)';
+          estimateEl.style.background = 'var(--gold-dim)';
+          estimateEl.style.color = 'var(--gold)';
         }
       };
 
-      if (S.negoProduct) {
-        document.getElementById('product-select').value = S.negoProduct.id;
-        updateDecentralisePreview();
-      }
+      selectCat(S.negoProduct?.category || categories[0]);
+      if (S.negoProduct) selectProduct(S.negoProduct.id);
     }
 
     renderSetup();
 
     window.startDecentralise = async () => {
-      const productId = document.getElementById('product-select').value;
-      const offer     = parseFloat(String(document.getElementById('initial-offer').value).replace(/\s/g, '').replace(',', '.'));
-      const maxR      = parseInt(document.getElementById('max-rounds').value) || 10;
+      if (!S.negoProduct) { toast('Sélectionnez un article', 'error'); return; }
+      const offer = parseFloat(String(document.getElementById('initial-offer')?.value || '').replace(/\s/g, '').replace(',', '.'));
+      const maxR  = parseInt(document.getElementById('max-rounds')?.value) || 10;
 
-      if (!productId || !offer || offer <= 0) {
-        toast('Remplissez tous les champs', 'error');
+      if (!offer || offer <= 0) {
+        toast('Entrez une offre initiale valide', 'error');
         return;
       }
-
-      S.negoProduct   = products.find(p => p.id == productId);
       S.negoMaxRounds = maxR;
       S.negoRound     = 0;
       S.negoNegotiations = [];
@@ -803,13 +800,50 @@ async function renderMarcheDecentralise(params = {}) {
       app.innerHTML = loader();
 
       try {
+        // Re-login pour garantir un token frais
+        try {
+          const auth = await apiLogin(S.activeAgent.email, 'password');
+          S.token = auth.token;
+          localStorage.setItem('sa7_token', auth.token);
+        } catch(loginErr) {
+          app.innerHTML = `<div class="page"><div class="empty-state"><div class="empty-icon">🔐</div><p>Session expirée — veuillez re-sélectionner votre agent depuis <a onclick="navigate('accueil')" style="color:var(--gold);cursor:pointer">l'Accueil</a>.</p></div></div>`;
+          return;
+        }
+
+        // Resolve buyer id (null si agent custom)
+        let buyerId = S.activeAgent.id;
+        if (!buyerId) {
+          const allUsers = await apiGetUsers();
+          S.users = allUsers;
+          const matched = allUsers.find(u => u.email === S.activeAgent.email);
+          if (!matched) {
+            app.innerHTML = `<div class="page"><div class="empty-state"><div class="empty-icon">⚠️</div><p>Agent introuvable en base — sélectionnez un agent acheteur depuis <a onclick="navigate('accueil')" style="color:var(--gold);cursor:pointer">l'Accueil</a>.</p></div></div>`;
+            return;
+          }
+          buyerId = matched.id;
+          S.activeAgent.id = buyerId;
+          localStorage.setItem('sa7_agent', JSON.stringify(S.activeAgent));
+        }
+
         // Find other products in same category (different sellers) for multi-vendor demo
         const sameCat = products.filter(p => p.category === S.negoProduct.category && p.sellerId !== S.negoProduct.sellerId);
         const vendors = [S.negoProduct, ...sameCat.slice(0, 2)]; // up to 3 vendors
+        // Stratégie fixe par vendeur (liée au nom)
+        const sellerStrategyMap = (name) => {
+          const n = (name || '').toLowerCase();
+          if (n.includes('trystan')     ) return 'GREEDY';
+          if (n.includes('rory')        ) return 'COOL_HEADED';
+          if (n.includes('sophie')      ) return 'FRUGAL';
+          if (n.includes('august')      ) return 'GREEDY';
+          if (n.includes('saint levant')) return 'COOL_HEADED';
+          if (n.includes('meriem')      ) return 'FRUGAL';
+          return 'COOL_HEADED'; // Anastasia + défaut
+        };
 
         // Create negotiations
-        for (const prod of vendors) {
-          const nego = await apiStartNego(S.activeAgent.id, prod.id);
+        for (let vi = 0; vi < vendors.length; vi++) {
+          const prod = vendors[vi];
+          const nego = await apiStartNego(buyerId, prod.id);
           S.negoNegotiations.push({
             negId: nego.id,
             sellerId: prod.sellerId,
@@ -818,195 +852,376 @@ async function renderMarcheDecentralise(params = {}) {
             priceMin: prod.priceMin,
             priceMax: prod.priceMax,
             status: 'NEGOTIATING',
+            sellerStrategy: sellerStrategyMap(prod.sellerName),
             offers: [],
           });
         }
 
         // Make initial offer for all
         for (const n of S.negoNegotiations) {
-          await apiMakeOffer(n.negId, S.activeAgent.id, offer);
+          await apiMakeOffer(n.negId, buyerId, offer);
           n.offers.push({ side: 'buyer', price: offer, round: 1 });
         }
 
         S.negoRound = 1;
-        toast('Négociation démarrée avec ' + S.negoNegotiations.length + ' vendeur(s)', 'success');
-        renderNegoView(offer);
+        // Afficher d'abord le chat avec l'offre initiale (sans barre de réponse)
+        renderNegoView(offer, true);
+        scrollOfferLists();
+
+        // Faire répondre chaque vendeur à l'offre initiale AVANT de montrer la barre de réponse
+        for (let i = 0; i < S.negoNegotiations.length; i++) {
+          const n = S.negoNegotiations[i];
+          if (n.status !== 'NEGOTIATING') continue;
+          n.pending = true;
+          renderNegoView(offer, true);
+          scrollOfferLists();
+          await delay(1600);
+
+          const negoAfterSeller = await apiAutoRespond(n.negId, n.sellerId, n.sellerStrategy);
+          n.pending = false;
+          n.status = negoAfterSeller.status;
+          // N'ajouter une contre-offre vendeur que si la négo est toujours active (COUNTER)
+          // Si AGREED ou FAILED, le vendeur a accepté/rejeté — pas de contre-offre à afficher
+          if (n.status === 'NEGOTIATING') {
+            const lastOff = negoAfterSeller.offers?.[negoAfterSeller.offers.length - 1];
+            if (lastOff?.proposedPrice) {
+              n.offers.push({ side: 'seller', price: lastOff.proposedPrice, round: 1 });
+            }
+          }
+          if (n.status === 'AGREED') { n.finalPrice = negoAfterSeller.finalPrice; n.offerCount = 1; }
+          renderNegoView(offer, true);
+          scrollOfferLists();
+          await delay(2500); // temps de lire la réponse vendeur
+        }
+
+        // Maintenant afficher la barre de réponse
+        renderNegoView(offer, false);
+        scrollOfferLists();
 
       } catch(e) {
-        toast('Erreur: ' + e.message, 'error');
-        renderSetup();
+        app.innerHTML = `<div class="page"><div class="empty-state"><div class="empty-icon">❌</div>
+          <p><strong>Erreur lors du lancement :</strong><br><code style="color:var(--crimson2);font-size:13px">${e.message || 'Erreur inconnue'}</code></p>
+          <button class="btn btn-secondary" style="margin-top:20px" onclick="navigate('marche-decentralise')">← Réessayer</button>
+        </div></div>`;
       }
     };
 
-    function renderNegoView(lastBuyerOffer) {
+    function renderNegoView(lastBuyerOffer, waitForSeller = false) {
       const doneAll = S.negoNegotiations.every(n => n.status === 'AGREED' || n.status === 'FAILED');
+      const STRAT_LABELS = { COOL_HEADED: 'Adaptatif', FRUGAL: 'Prudent', GREEDY: 'Agressif' };
 
-      const stratKey = S.activeAgent && S.activeAgent.strategyKey ? S.activeAgent.strategyKey : 'COOL_HEADED';
-
-      const vendorCards = S.negoNegotiations.map(n => {
-        const offerBubbles = n.offers.map(o => {
-          const bubble = `
-            <div class="offer-bubble ${o.side} ${o.side === 'seller' && o.rejected ? 'rejected' : ''}">
-              <div class="offer-price">${fmt(o.price)}</div>
-              <div class="offer-label">${o.side === 'buyer' ? '🛒 Acheteur — Round ' + o.round : '🏪 ' + n.sellerName + ' — Round ' + o.round}</div>
-            </div>`;
-          if (o.side === 'seller') {
-            const buyerPrice  = n.offers.filter(x => x.side === 'buyer' && x.round === o.round).map(x => x.price)[0] || o.price;
-            const reasoning   = agentReasoning(stratKey, o.round || 1, S.negoMaxRounds, buyerPrice, o.price, n.priceMin || 0, n.priceMax || 0);
-            return bubble + `<div class="agent-reasoning">◆ ${reasoning}</div>`;
-          }
-          return bubble;
-        }).join('');
-
-        return `
-          <div class="nego-vendor-card">
-            <div class="nego-vendor-header">
-              <div class="nego-vendor-name">🏪 ${n.sellerName}</div>
-              ${statusBadge(n.status)}
-            </div>
-            <div class="nego-vendor-body">
-              <div style="font-size:12px;color:var(--text3);margin-bottom:12px">
-                ${n.productName} &nbsp;|&nbsp; Min: ${fmt(n.priceMin)} &nbsp;|&nbsp; Max: ${fmt(n.priceMax)}
+      // Build base layout once — reuse DOM between re-renders for smooth chat
+      if (!document.getElementById('nego-chat-grid')) {
+        const chatWindows = S.negoNegotiations.map((n, i) => `
+          <div class="nego-chat-window" id="chatwin-${n.negId}">
+            <div class="chat-win-header">
+              <div class="chat-win-avatar">${n.sellerName[0].toUpperCase()}</div>
+              <div class="chat-win-meta">
+                <div class="chat-win-name">${n.sellerName}</div>
+                <div class="chat-win-product">📦 ${n.productName} · ${fmt(n.priceMin)} — ${fmt(n.priceMax)}</div>
               </div>
-              <div class="nego-offers-list" id="offers-${n.negId}">${offerBubbles}</div>
-              ${n.status === 'AGREED' ? `<div class="text-green font-bold" style="font-size:16px">✓ Accord : ${fmt(n.finalPrice)}</div>` : ''}
-              ${n.status === 'FAILED' ? `<div class="text-red font-bold">✗ Négociation échouée</div>` : ''}
+              <div id="badge-${n.negId}">${statusBadge(n.status)}</div>
+            </div>
+            <div class="chat-messages" id="chat-${n.negId}">
+              <div class="chat-sys-msg">💎 Négociation ouverte · Stratégie vendeur : <strong>${STRAT_LABELS[n.sellerStrategy] || n.sellerStrategy}</strong></div>
+              <div class="chat-msg chat-seller-msg">
+                <div class="chat-bubble chat-bubble-seller">
+                  <span class="chat-text">Bonjour ! En attente de votre offre... 👀</span>
+                </div>
+              </div>
+            </div>
+          </div>`).join('');
+
+        app.innerHTML = `
+          <div class="page" id="nego-page">
+            <div class="page-header">
+              <h1>🔀 Marché Décentralisé</h1>
+              <p>${S.negoProduct?.name} — <em>${S.activeAgent.name}</em> (${S.activeAgent.strategy})</p>
+            </div>
+            <div class="round-progress" id="nego-progress-bar">
+              <div class="progress-bar"><div class="progress-fill" id="nego-pfill" style="width:0%"></div></div>
+              <div class="round-label">
+                <span id="nego-round-label">Tour 0 / ${S.negoMaxRounds}</span>
+                <span id="nego-accord-label">0 accord(s) / ${S.negoNegotiations.length} vendeur(s)</span>
+              </div>
+            </div>
+            <div class="nego-chat-grid" id="nego-chat-grid">${chatWindows}</div>
+            <div id="nego-bottom-section"></div>
+            <div id="nego-conv-chart-wrap" style="display:none;padding:0 0 40px">
+              <div class="conv-chart-wrap">
+                <div class="conv-chart-title">Convergence des Offres</div>
+                <div id="nego-conv-chart"></div>
+                <div class="conv-legend">
+                  <span class="conv-leg-solid">— acheteur</span>
+                  <span class="conv-leg-dash">- - vendeur</span>
+                  <span class="conv-leg-dot">⊙ accord</span>
+                </div>
+              </div>
             </div>
           </div>`;
-      }).join('');
+      }
 
-      // Result if all done
+      // Update progress bar
       const agreed = S.negoNegotiations.filter(n => n.status === 'AGREED');
+      const fillEl = document.getElementById('nego-pfill');
+      if (fillEl) fillEl.style.width = Math.round((S.negoRound / S.negoMaxRounds) * 100) + '%';
+      const roundLbl = document.getElementById('nego-round-label');
+      if (roundLbl) roundLbl.textContent = `Tour ${S.negoRound} / ${S.negoMaxRounds}`;
+      const accordLbl = document.getElementById('nego-accord-label');
+      if (accordLbl) accordLbl.textContent = `${agreed.length} accord(s) / ${S.negoNegotiations.length} vendeur(s)`;
 
-      // Feature 8: surplus summary
-      const surplusSummary = agreed.length > 0 ? `
-        <div class="surplus-summary">
-          ${agreed.map(n => {
-            const surplus  = (n.priceMax || 0) - (n.finalPrice || 0);
-            const pct      = n.priceMax ? Math.round((surplus / n.priceMax) * 100) : 0;
-            return `<div class="surplus-row">
-              <span class="surplus-label">Économie réalisée — ${n.sellerName}</span>
-              <span class="surplus-amount">+${fmt(surplus)}</span>
-              <span class="surplus-bar-wrap"><span class="surplus-bar-fill" style="width:${pct}%"></span></span>
-              <span class="surplus-pct">${pct}% sous le prix max</span>
-            </div>`;
-          }).join('')}
-        </div>` : '';
 
-      const resultSection = doneAll ? `
-        <div class="${agreed.length > 0 ? 'result-card' : 'result-card failed'}" style="margin-top:24px">
-          <div class="result-icon">${agreed.length > 0 ? '✅' : '❌'}</div>
-          <div class="result-title ${agreed.length > 0 ? 'success' : 'fail'}">
-            ${agreed.length > 0 ? agreed.length + ' accord(s) trouvé(s) !' : 'Aucun accord'}
-          </div>
-          ${agreed.map(n => `<div style="font-size:14px;margin-top:8px">• ${n.sellerName} — <strong style="color:var(--gold)">${fmt(n.finalPrice)}</strong> — ${n.offerCount || '—'} round(s)</div>`).join('')}
-          ${surplusSummary}
-          <div class="btn-row" style="margin-top:20px;justify-content:center">
-            <button class="btn btn-primary" onclick="navigate('historique')">Voir dans l'historique</button>
-            <button class="btn btn-secondary" onclick="navigate('marche-decentralise')">Nouvelle négociation</button>
-          </div>
-        </div>` : '';
+      // Update each chat window — append only new messages
+      S.negoNegotiations.forEach((n, i) => {
+        const chatEl = document.getElementById(`chat-${n.negId}`);
+        if (!chatEl) return;
 
-      app.innerHTML = `
-        <div class="page">
-          <div class="page-header">
-            <h1>🔀 Marché Décentralisé</h1>
-            <p>${S.negoProduct?.name} — ${S.activeAgent.name} (${S.activeAgent.strategy})</p>
-          </div>
+        const badgeEl = document.getElementById(`badge-${n.negId}`);
+        if (badgeEl) badgeEl.innerHTML = statusBadge(n.status);
 
-          <div class="round-progress">
-            <h3>Progression de la Négociation</h3>
-            <div class="progress-bar">
-              <div class="progress-fill" style="width:${Math.round((S.negoRound/S.negoMaxRounds)*100)}%"></div>
-            </div>
-            <div class="round-label">
-              <span>Tour ${S.negoRound}/${S.negoMaxRounds}</span>
-              <span>${S.negoNegotiations.filter(n=>n.status==='AGREED').length} accord(s) / ${S.negoNegotiations.length} vendeur(s)</span>
-            </div>
-          </div>
+        n.offers.forEach((o, idx) => {
+          const mid = `msg-${n.negId}-${idx}`;
+          if (document.getElementById(mid)) return; // already rendered
 
-          ${S.negoNegotiations.some(n => n.offers.length > 1) ? `
-          <div class="conv-chart-wrap">
-            <div class="conv-chart-title">Convergence des Offres</div>
-            ${drawConvergenceChart(S.negoNegotiations, S.negoMaxRounds)}
-            <div class="conv-legend">
-              <span class="conv-leg-solid">— acheteur</span>
-              <span class="conv-leg-dash">- - vendeur</span>
-              <span class="conv-leg-dot">⊙ accord</span>
-            </div>
-          </div>` : ''}
+          const msgEl = document.createElement('div');
+          msgEl.id = mid;
 
-          <div class="nego-multi-grid">${vendorCards}</div>
+          if (o.side === 'buyer') {
+            const buyerEmojis = ['💰','🤝','✨','💼','🎯','💡'];
+            const emoji = buyerEmojis[Math.floor(idx / 2) % buyerEmojis.length];
+            msgEl.className = 'chat-msg chat-buyer-msg';
+            msgEl.innerHTML = `
+              <div class="chat-bubble chat-bubble-buyer">
+                <span class="chat-text">${emoji} Je propose <strong>${fmt(o.price)}</strong></span>
+                <span class="chat-time">Round ${o.round}</span>
+              </div>`;
+          } else if (o.side === 'seller') {
+            const buyerRef = n.offers.filter(x => x.side === 'buyer' && x.round === o.round)[0]?.price
+              || n.offers.filter(x => x.side === 'buyer').slice(-1)[0]?.price;
+            const reasoning = agentReasoning(n.sellerStrategy || 'COOL_HEADED', o.round || 1, S.negoMaxRounds, buyerRef || o.price, o.price, n.priceMin || 0, n.priceMax || 0);
+            const diff = buyerRef ? Math.abs(o.price - buyerRef) : 0;
+            const sellerEmoji = o.price > (buyerRef || 0) * 1.5 ? '😤' : o.price > (buyerRef || 0) * 1.1 ? '🤨' : '🙏';
+            msgEl.className = 'chat-msg chat-seller-msg';
+            msgEl.innerHTML = `
+              <div class="chat-bubble chat-bubble-seller">
+                <span class="chat-text">${sellerEmoji} Je contre-propose <strong>${fmt(o.price)}</strong></span>
+                ${buyerRef ? `<span class="chat-detail">${o.price > buyerRef ? '+' : '-'}${fmt(diff)} ${o.price >= buyerRef ? 'au-dessus' : 'en dessous'} de votre offre</span>` : ''}
+                <span class="chat-reasoning-inline">◆ ${reasoning}</span>
+                <span class="chat-time">Round ${o.round}</span>
+              </div>`;
+          }
+          chatEl.appendChild(msgEl);
+        });
 
-          ${!doneAll ? `
-            <div class="offer-input-section">
-              <h3>🛒 Votre prochaine offre — Tour ${S.negoRound + 1}</h3>
-              <div class="form-row" style="max-width:500px">
-                <div class="form-group">
-                  <label>Prix proposé (€)</label>
-                  <input type="number" id="next-offer" value="${Math.round((lastBuyerOffer || 0) * 1.05)}" min="1">
-                </div>
-                <div class="form-group" style="display:flex;flex-direction:column;justify-content:flex-end">
-                  <button class="btn btn-primary" onclick="nextRound()">Tour Suivant ▶</button>
-                </div>
-              </div>
-              <div class="btn-row" style="margin-top:12px">
-                <button class="btn btn-green btn-sm" onclick="autoMode()">⚡ Mode Auto</button>
-                <button class="btn btn-secondary btn-sm" onclick="navigate('marche-decentralise')">Annuler</button>
-              </div>
-            </div>` : resultSection}
-        </div>`;
-
-      window.nextRound = async () => {
-        const nextOffer = parseFloat(document.getElementById('next-offer')?.value);
-        if (!nextOffer || nextOffer <= 0) { toast('Entrez un prix valide', 'error'); return; }
-        await runRound(nextOffer);
-      };
-
-      window.autoMode = async () => {
-        S.negoAutoMode = true;
-        toast('Mode automatique activé', 'info');
-        let currentOffer = lastBuyerOffer;
-        while (!S.negoNegotiations.every(n => n.status !== 'NEGOTIATING') && S.negoRound < S.negoMaxRounds) {
-          currentOffer = Math.round(currentOffer * 1.04);
-          await runRound(currentOffer);
-          await new Promise(r => setTimeout(r, 800));
+        // Typing indicator
+        document.getElementById(`typing-${n.negId}`)?.remove();
+        if (n.pending) {
+          const typingEl = document.createElement('div');
+          typingEl.id = `typing-${n.negId}`;
+          typingEl.className = 'chat-msg chat-seller-msg';
+          typingEl.innerHTML = `<div class="chat-bubble chat-bubble-seller chat-typing-bubble">
+            <span class="thinking-dot"></span><span class="thinking-dot"></span><span class="thinking-dot"></span>
+            <span class="chat-typing-label">${n.sellerName} réfléchit...</span>
+          </div>`;
+          chatEl.appendChild(typingEl);
         }
-      };
+
+        // Final status message (once)
+        if (!document.getElementById(`final-${n.negId}`)) {
+          if (n.status === 'AGREED') {
+            const el = document.createElement('div');
+            el.id = `final-${n.negId}`;
+            el.className = 'chat-sys-msg chat-sys-agreed';
+            el.innerHTML = `✅ Accord conclu à <strong>${fmt(n.finalPrice)}</strong> · ${n.offerCount} round(s) 🎉`;
+            chatEl.appendChild(el);
+          } else if (n.status === 'FAILED') {
+            const el = document.createElement('div');
+            el.id = `final-${n.negId}`;
+            el.className = 'chat-sys-msg chat-sys-failed';
+            el.innerHTML = `❌ Négociation échouée`;
+            chatEl.appendChild(el);
+          }
+        }
+
+        chatEl.scrollTop = chatEl.scrollHeight;
+      });
+
+      // Update bottom section
+      const bottomEl = document.getElementById('nego-bottom-section');
+      if (!bottomEl) return;
+
+      if (waitForSeller) {
+        bottomEl.innerHTML = `<div style="text-align:center;padding:24px;color:var(--grey);font-size:14px;letter-spacing:.05em">
+          ⏳ &nbsp; En attente des réponses vendeurs...
+        </div>`;
+        return;
+      }
+
+      if (doneAll) {
+        const surplusSummary = agreed.length > 0 ? `
+          <div class="surplus-summary">
+            ${agreed.map(n => {
+              const surplus = (n.priceMax || 0) - (n.finalPrice || 0);
+              const pct2 = n.priceMax ? Math.round((surplus / n.priceMax) * 100) : 0;
+              return `<div class="surplus-row">
+                <span class="surplus-label">Économie — ${n.sellerName}</span>
+                <span class="surplus-amount">+${fmt(surplus)}</span>
+                <span class="surplus-bar-wrap"><span class="surplus-bar-fill" style="width:${pct2}%"></span></span>
+                <span class="surplus-pct">${pct2}% sous le max</span>
+              </div>`;
+            }).join('')}
+          </div>` : '';
+        bottomEl.innerHTML = `
+          <div class="${agreed.length > 0 ? 'result-card' : 'result-card failed'}" style="margin-top:24px">
+            <div class="result-icon">${agreed.length > 0 ? '✅' : '❌'}</div>
+            <div class="result-title ${agreed.length > 0 ? 'success' : 'fail'}">
+              ${agreed.length > 0 ? agreed.length + ' accord(s) trouvé(s) !' : 'Aucun accord'}
+            </div>
+            ${agreed.map(n => `<div style="font-size:14px;margin-top:8px">• ${n.sellerName} — <strong style="color:var(--gold)">${fmt(n.finalPrice)}</strong> — ${n.offerCount || '—'} round(s)</div>`).join('')}
+            ${surplusSummary}
+            <div class="btn-row" style="margin-top:20px;justify-content:center">
+              <button class="btn btn-primary" onclick="navigate('historique')">Voir dans l'historique</button>
+              <button class="btn btn-secondary" onclick="navigate('marche-decentralise')">Nouvelle négociation</button>
+            </div>
+          </div>`;
+        // Afficher le graphe de convergence en bas après le résultat
+        const chartWrap = document.getElementById('nego-conv-chart-wrap');
+        const chartEl = document.getElementById('nego-conv-chart');
+        if (chartWrap && chartEl) {
+          chartEl.innerHTML = drawConvergenceChart(S.negoNegotiations, S.negoMaxRounds);
+          chartWrap.style.display = 'block';
+        }
+      } else {
+        // Smart suggestion: converge toward lowest seller counter
+        const activeNegos = S.negoNegotiations.filter(n => n.status === 'NEGOTIATING');
+        const sellerCounters = activeNegos
+          .map(n => n.offers.filter(o => o.side === 'seller').slice(-1)[0]?.price)
+          .filter(Boolean);
+        const lowestCounter = sellerCounters.length ? Math.min(...sellerCounters) : null;
+        const suggestedNext = lowestCounter
+          ? Math.round((lastBuyerOffer + lowestCounter) / 2)
+          : Math.round(lastBuyerOffer * 1.05);
+
+        bottomEl.innerHTML = `
+          <div class="chat-offer-bar">
+            <div class="chat-offer-bar-title">💬 Votre réponse — Tour ${S.negoRound + 1}</div>
+            ${lowestCounter ? `<div class="chat-offer-hint">💡 Contre-offre la plus basse : <strong>${fmt(lowestCounter)}</strong> — suggestion : <strong>${fmt(suggestedNext)}</strong></div>` : ''}
+            <div class="chat-offer-inputs">
+              <input type="number" id="next-offer" class="chat-offer-input" value="${suggestedNext}" min="1">
+              <span class="chat-offer-unit">€</span>
+              <button class="chat-offer-send" onclick="nextRound()">Envoyer 📨</button>
+            </div>
+            <div class="chat-offer-actions">
+              <button class="chat-action-btn chat-action-auto" onclick="autoMode()">⚡ Mode Auto</button>
+              <button class="chat-action-btn chat-action-withdraw" onclick="withdrawOffer()">↩ Retirer l'offre <small>(pénalité 2%)</small></button>
+              <button class="chat-action-btn chat-action-cancel" onclick="navigate('marche-decentralise')">✕ Annuler</button>
+            </div>
+          </div>`;
+
+        window.nextRound = async () => {
+          const v = parseFloat(document.getElementById('next-offer')?.value);
+          if (!v || v <= 0) { toast('Entrez un prix valide', 'error'); return; }
+          await runRound(v);
+        };
+
+        window.withdrawOffer = () => {
+          const penalty = Math.round(lastBuyerOffer * 0.02);
+          toast(`↩ Offre retirée — Pénalité : ${fmt(penalty)} (2% de ${fmt(lastBuyerOffer)})`, 'warning');
+          S.negoNegotiations.filter(n => n.status === 'NEGOTIATING').forEach(n => { n.status = 'FAILED'; });
+          renderNegoView(lastBuyerOffer);
+        };
+
+        window.autoMode = async () => {
+          if (S.negoAutoMode) return;
+          S.negoAutoMode = true;
+          toast('⚡ Mode automatique activé', 'info');
+          let currentOffer = lastBuyerOffer;
+          while (!S.negoNegotiations.every(n => n.status !== 'NEGOTIATING') && S.negoRound < S.negoMaxRounds) {
+            const active = S.negoNegotiations.filter(n => n.status === 'NEGOTIATING');
+            const counters = active.map(n => n.offers.filter(o => o.side === 'seller').slice(-1)[0]?.price).filter(Boolean);
+            const lowest = counters.length ? Math.min(...counters) : null;
+            // Smart convergence: meet halfway if seller is close enough
+            if (lowest && lowest <= Math.round(currentOffer * 1.06)) {
+              currentOffer = Math.round((currentOffer + lowest) / 2);
+            } else {
+              currentOffer = Math.round(currentOffer * 1.05);
+            }
+            await runRound(currentOffer);
+            await new Promise(r => setTimeout(r, 400));
+          }
+          S.negoAutoMode = false;
+        };
+      }
     }
+
+    const delay = ms => new Promise(r => setTimeout(r, ms));
 
     async function runRound(buyerOffer) {
       S.negoRound++;
       const activeNegos = S.negoNegotiations.filter(n => n.status === 'NEGOTIATING');
-
-      for (const n of activeNegos) {
+      for (let i = 0; i < activeNegos.length; i++) {
+        const n = activeNegos[i];
         try {
-          // Buyer makes offer
+          // Montrer "vendeur réfléchit..."
+          n.pending = true;
+          renderNegoView(buyerOffer, true);
+          scrollOfferLists();
+          await delay(1800);
+
+          // 1. Le vendeur répond à l'offre buyer en attente
+          const negoAfterSeller = await apiAutoRespond(n.negId, n.sellerId, n.sellerStrategy || 'COOL_HEADED');
+          n.pending = false;
+          n.status = negoAfterSeller.status;
+
+          // N'ajouter une contre-offre vendeur que si la négo est toujours active (COUNTER)
+          if (n.status === 'NEGOTIATING') {
+            const lastOffer = negoAfterSeller.offers?.[negoAfterSeller.offers.length - 1];
+            if (lastOffer?.proposedPrice) {
+              n.offers.push({ side: 'seller', price: lastOffer.proposedPrice, round: S.negoRound });
+            }
+          }
+
+          // Afficher réponse vendeur — attendre que l'utilisateur lise
+          renderNegoView(buyerOffer, true);
+          scrollOfferLists();
+
+          if (n.status === 'AGREED') {
+            n.finalPrice = negoAfterSeller.finalPrice;
+            n.offerCount = S.negoRound;
+            renderNegoView(buyerOffer, true);
+            scrollOfferLists();
+            await delay(2000);
+            continue;
+          }
+          if (n.status === 'FAILED') {
+            await delay(1500);
+            continue;
+          }
+
+          // Temps de lire la contre-offre avant que le buyer réponde
+          await delay(2500);
+
+          // 2. Buyer envoie sa nouvelle offre
           await apiMakeOffer(n.negId, S.activeAgent.id, buyerOffer);
           n.offers.push({ side: 'buyer', price: buyerOffer, round: S.negoRound });
 
-          // Seller auto-responds
-          const negoUpdated = await apiAutoRespond(n.negId, n.sellerId, 'GREEDY');
-          n.status = negoUpdated.status;
-          if (negoUpdated.status === 'AGREED') {
-            n.finalPrice = negoUpdated.finalPrice;
-            n.offerCount = S.negoRound;
-          }
-
-          // Add seller response to display
-          const lastOffer = negoUpdated.offers?.[negoUpdated.offers.length - 1];
-          if (lastOffer && lastOffer.proposedPrice) {
-            n.offers.push({ side: 'seller', price: lastOffer.proposedPrice, round: S.negoRound });
-          }
+          renderNegoView(buyerOffer, true);
+          scrollOfferLists();
+          await delay(1000);
         } catch(e) {
+          console.error('runRound error:', e);
+          n.pending = false;
           n.status = 'FAILED';
+          renderNegoView(buyerOffer, true);
         }
       }
 
-      renderNegoView(buyerOffer);
+      renderNegoView(buyerOffer, false);
+      scrollOfferLists();
+    }
 
-      // Scroll offer lists to bottom
-      document.querySelectorAll('.nego-offers-list').forEach(el => {
+    function scrollOfferLists() {
+      document.querySelectorAll('.chat-messages').forEach(el => {
         el.scrollTop = el.scrollHeight;
       });
     }
@@ -1180,7 +1395,7 @@ async function renderMarcheCentralise() {
         </div>`;
 
       // Step 1 — collect bids
-      await sleep(1100);
+      await sleep(1800);
       document.getElementById('step1').classList.add('done');
       document.getElementById('step2').classList.add('active');
 
@@ -1192,7 +1407,7 @@ async function renderMarcheCentralise() {
       });
 
       // Step 2 — collect asks
-      await sleep(1000);
+      await sleep(1800);
       document.getElementById('step2').classList.add('done');
       document.getElementById('step3').classList.add('active');
 
@@ -1202,7 +1417,7 @@ async function renderMarcheCentralise() {
         return { seller: p.sellerName || ('Vendeur'+(i+1)), sellerShort: 'Vendeur'+(i+1), product: p.name, ask: Math.round(base), floor: p.priceMin, matched: false };
       });
 
-      await sleep(800);
+      await sleep(1500);
       document.getElementById('step3').classList.add('done');
 
       // Show round indicator
@@ -1281,7 +1496,7 @@ async function renderMarcheCentralise() {
         currentBids.forEach(b => { if (!b.matched) b.bid = Math.round(b.bid * 1.03); });
         currentAsks.forEach(a => { if (!a.matched) a.ask = Math.round(a.ask * 0.97); });
 
-        await sleep(750);
+        await sleep(2000);
       }
 
       // Final summary
@@ -2194,16 +2409,27 @@ function drawConvergenceChart(negotiations, maxRounds) {
     const buyerOffers  = n.offers.filter(o => o.side === 'buyer');
     const sellerOffers = n.offers.filter(o => o.side === 'seller');
 
+    // Ligne acheteur (au moins 2 points) ou point seul si 1 round
     if (buyerOffers.length > 1) {
       const pts = buyerOffers.map(o => `${xScale(o.round || 1)},${yScale(o.price)}`).join(' ');
       lines += `<polyline points="${pts}" fill="none" stroke="${col}" stroke-width="2" opacity="0.9"/>`;
+    } else if (buyerOffers.length === 1) {
+      const cx = xScale(buyerOffers[0].round || 1);
+      const cy = yScale(buyerOffers[0].price);
+      dots += `<circle cx="${cx}" cy="${cy}" r="3" fill="${col}" opacity="0.8"/>`;
     }
+
+    // Ligne vendeur (au moins 2 points) ou point seul
     if (sellerOffers.length > 1) {
       const pts = sellerOffers.map(o => `${xScale(o.round || 1)},${yScale(o.price)}`).join(' ');
       lines += `<polyline points="${pts}" fill="none" stroke="${col}" stroke-width="1.5" stroke-dasharray="5 3" opacity="0.75"/>`;
+    } else if (sellerOffers.length === 1) {
+      const cx = xScale(sellerOffers[0].round || 1);
+      const cy = yScale(sellerOffers[0].price);
+      dots += `<circle cx="${cx}" cy="${cy}" r="3" fill="none" stroke="${col}" stroke-width="1.5" stroke-dasharray="3 2" opacity="0.75"/>`;
     }
 
-    // Agreement dot
+    // Point d'accord
     if (n.status === 'AGREED' && n.finalPrice) {
       const lastRound = n.offers.length ? n.offers[n.offers.length - 1].round || 1 : 1;
       const cx = xScale(lastRound);
@@ -2227,35 +2453,31 @@ function drawConvergenceChart(negotiations, maxRounds) {
 // ==================== FEATURE 3: AGENT REASONING ====================
 function agentReasoning(stratKey, round, maxRounds, buyerPrice, sellerPrice, priceMin, priceMax) {
   const pct = round / maxRounds;
-  const gap = Math.round((sellerPrice - buyerPrice) / 1000);
-  const mid = Math.round((priceMin + priceMax) / 2 / 1000);
+  const gap = Math.round(sellerPrice - buyerPrice);
+  const mid = Math.round((priceMin + priceMax) / 2);
 
   if (stratKey === 'GREEDY') {
     if (pct < 0.30) {
-      const abovePct = Math.round(((sellerPrice / priceMax) - 1) * 100);
-      return `Phase d'ancrage agressif — maintien à ${abovePct}% au-dessus pour ancrer haut`;
+      return `Je reste ferme sur mon prix — je ne baisse pas encore`;
     } else if (pct <= 0.65) {
-      return `Résistance calculée (-3%/round) — écart restant : ${gap}k€`;
+      return `Il reste ${fmt(gap)} d'écart — je baisse un peu mais pas trop`;
     } else {
-      return `Round critique (${round}/${maxRounds}) — dernière concession avant rupture`;
+      return `On approche de la fin (tour ${round}/${maxRounds}) — c'est ma dernière concession`;
     }
   } else if (stratKey === 'FRUGAL') {
     if (pct < 0.40) {
-      return `Exploration prudente vers le point médian estimé (~${mid}k€)`;
+      return `Je vise un accord autour de ${fmt(mid)} — je descends doucement`;
     } else {
-      const offerPct = Math.round(((sellerPrice / buyerPrice) - 1) * 100);
-      return `Convergence stable — objectif accord à +${Math.max(0, offerPct)}% de l'offre courante`;
+      return `On se rapproche — encore ${fmt(gap)} à combler`;
     }
   } else {
     // COOL_HEADED
     if (pct < 0.30) {
-      return `Modélisation adversaire — observation des patterns (${round}/${maxRounds} rounds)`;
+      return `J'observe comment tu négocie avant de concéder`;
     } else if (pct <= 0.65) {
-      const diff = Math.round(((sellerPrice - buyerPrice) / sellerPrice) * 100);
-      return `Convergence calculée — offre à ${diff}% de la demande vendeur`;
+      return `On se rapproche — il reste ${fmt(gap)} entre nos deux prix`;
     } else {
-      const sacrifice = Math.round(((sellerPrice - buyerPrice) / 2 / 1000));
-      return `Maximisation probabilité d'accord — sacrifice ${sacrifice}k€ marge pour conclure avant round ${maxRounds}`;
+      return `Je veux conclure avant le tour ${maxRounds} — je fais un effort`;
     }
   }
 }

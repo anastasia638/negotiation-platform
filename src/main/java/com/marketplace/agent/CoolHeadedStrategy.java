@@ -24,9 +24,9 @@ public class CoolHeadedStrategy implements NegotiationStrategy {
         BigDecimal range = maxPrice.subtract(minPrice);
         BigDecimal midPrice = minPrice.add(range.divide(BigDecimal.valueOf(2), 2, RoundingMode.HALF_UP));
 
-        // Accepte si l'offre est dans les 15% autour du milieu
-        BigDecimal lowerBound = midPrice.subtract(range.multiply(BigDecimal.valueOf(0.15))).setScale(2, RoundingMode.HALF_UP);
-        BigDecimal upperBound = midPrice.add(range.multiply(BigDecimal.valueOf(0.15))).setScale(2, RoundingMode.HALF_UP);
+        // Accepte si l'offre est dans les 8% autour du milieu
+        BigDecimal lowerBound = midPrice.subtract(range.multiply(BigDecimal.valueOf(0.08))).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal upperBound = midPrice.add(range.multiply(BigDecimal.valueOf(0.08))).setScale(2, RoundingMode.HALF_UP);
 
         if (offeredPrice.compareTo(lowerBound) >= 0 && offeredPrice.compareTo(upperBound) <= 0) {
             return StrategyDecision.accept();
@@ -50,9 +50,14 @@ public class CoolHeadedStrategy implements NegotiationStrategy {
             counterPrice = midPrice.add(range.multiply(BigDecimal.valueOf(distanceRatio)))
                     .setScale(2, RoundingMode.HALF_UP);
         } else {
-            // L'offre est trop haute — on répond en-dessous du milieu
+            // L'offre est au-dessus du milieu — on répond en-dessous du milieu
             counterPrice = midPrice.subtract(range.multiply(BigDecimal.valueOf(distanceRatio)))
                     .setScale(2, RoundingMode.HALF_UP);
+        }
+
+        // Si la contre-offre est <= au prix proposé, accepter directement
+        if (counterPrice.compareTo(offeredPrice) <= 0) {
+            return StrategyDecision.accept();
         }
 
         return StrategyDecision.counter(counterPrice);

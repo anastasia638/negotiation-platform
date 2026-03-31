@@ -110,11 +110,23 @@ public class NegotiationEngine {
                 negotiationRepository.save(negotiation);
             }
             case COUNTER -> {
-                lastOffer.setStatus(OfferStatus.REJECTED);
-                offerRepository.save(lastOffer);
-                Offer counter = new Offer(negotiation, responder,
-                        decision.getCounterPrice(), lastOffer.getRoundNumber() + 1);
-                offerRepository.save(counter);
+                // Si la contre-offre est <= au prix proposé par l'acheteur,
+                // le vendeur accepte directement (inutile de contre-proposer moins cher)
+                if (decision.getCounterPrice().compareTo(lastOffer.getProposedPrice()) <= 0) {
+                    lastOffer.setStatus(OfferStatus.ACCEPTED);
+                    offerRepository.save(lastOffer);
+                    negotiation.setStatus(NegotiationStatus.AGREED);
+                    negotiation.setFinalPrice(lastOffer.getProposedPrice());
+                    negotiation.setFinalQuantity(lastOffer.getProposedQuantity());
+                    negotiation.setEndedAt(LocalDateTime.now());
+                    negotiationRepository.save(negotiation);
+                } else {
+                    lastOffer.setStatus(OfferStatus.REJECTED);
+                    offerRepository.save(lastOffer);
+                    Offer counter = new Offer(negotiation, responder,
+                            decision.getCounterPrice(), lastOffer.getRoundNumber() + 1);
+                    offerRepository.save(counter);
+                }
             }
         }
 

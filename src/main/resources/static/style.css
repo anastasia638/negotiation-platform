@@ -2615,6 +2615,334 @@ body.high-contrast .contrast-icon::before { content: '●'; }
 }
 
 /* ================================================================
+   DÉCENTRALISÉ — CATEGORY CHIPS + PRODUCT CAROUSEL
+   ================================================================ */
+.cat-chips { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:4px; }
+.cat-chip {
+  background: var(--surface3);
+  border: 1px solid var(--border);
+  color: var(--text2);
+  font-size: 12.5px;
+  padding: 7px 16px;
+  border-radius: 100px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: var(--font-body);
+  letter-spacing: 0.04em;
+}
+.cat-chip:hover { border-color: var(--gold); color: var(--white); }
+.cat-chip.active { background: var(--gold-dim); border-color: var(--gold); color: var(--gold); font-weight: 600; }
+
+.product-carousel {
+  overflow: hidden;
+  position: relative;
+  padding: 4px 0 12px;
+}
+.product-carousel::before, .product-carousel::after {
+  content: '';
+  position: absolute;
+  top: 0; bottom: 0;
+  width: 48px;
+  z-index: 2;
+  pointer-events: none;
+}
+.product-carousel::before { left: 0; background: linear-gradient(to right, var(--surface), transparent); }
+.product-carousel::after  { right: 0; background: linear-gradient(to left,  var(--surface), transparent); }
+
+.pcarousel-track {
+  display: inline-flex;
+  gap: 12px;
+  animation: pcarousel-scroll 28s linear infinite;
+  will-change: transform;
+}
+.pcarousel-track:hover { animation-play-state: paused; cursor: default; }
+
+@keyframes pcarousel-scroll {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.pcarousel-card {
+  flex-shrink: 0;
+  width: 155px;
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.25s var(--ease-out);
+  position: relative;
+}
+.pcarousel-card:hover { border-color: var(--gold); transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
+.pcarousel-selected { border-color: var(--gold) !important; box-shadow: 0 0 0 2px var(--gold-dim) !important; }
+.pcarousel-img { height: 95px; background-size: cover; background-position: center; }
+.pcarousel-body { padding: 10px; }
+.pcarousel-brand { font-size: 9px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--gold); margin-bottom: 2px; }
+.pcarousel-name { font-size: 11px; color: var(--white); font-weight: 500; line-height: 1.3; margin-bottom: 4px; }
+.pcarousel-range { font-size: 10px; color: var(--text3); }
+.pcarousel-check {
+  position: absolute; top: 7px; right: 7px;
+  width: 20px; height: 20px; border-radius: 50%;
+  background: var(--gold); color: var(--black);
+  font-size: 11px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; transition: opacity 0.2s;
+}
+.pcarousel-selected .pcarousel-check { opacity: 1; }
+
+/* ================================================================
+   DÉCENTRALISÉ — CHAT INTERFACE
+   ================================================================ */
+.nego-chat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+  margin: 24px 0;
+}
+
+.nego-chat-window {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-win-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+}
+.chat-win-avatar {
+  width: 40px; height: 40px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--crimson), #6b0018);
+  color: var(--white);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; font-weight: 700; flex-shrink: 0;
+}
+.chat-win-meta { flex: 1; min-width: 0; }
+.chat-win-name { font-size: 13.5px; font-weight: 600; color: var(--white); letter-spacing: 0.03em; }
+.chat-win-product { font-size: 10.5px; color: var(--text3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+
+.chat-messages {
+  flex: 1;
+  padding: 16px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 380px;
+  min-height: 180px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+.chat-messages::-webkit-scrollbar { width: 3px; }
+.chat-messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+.chat-msg { display: flex; animation: bubble-in 0.35s var(--ease-out) both; }
+.chat-buyer-msg { justify-content: flex-end; }
+.chat-seller-msg { justify-content: flex-start; }
+
+.chat-bubble {
+  max-width: 80%;
+  padding: 10px 14px;
+  border-radius: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.chat-bubble-buyer {
+  background: linear-gradient(135deg, #c9a84c, #9e7b28);
+  color: #1a1205;
+  border-bottom-right-radius: 4px;
+}
+.chat-bubble-buyer .chat-text { color: #1a1205; font-weight: 500; }
+.chat-bubble-buyer .chat-time { color: rgba(0,0,0,0.45); }
+.chat-bubble-seller {
+  background: var(--surface3);
+  border: 1px solid var(--border);
+  color: var(--white);
+  border-bottom-left-radius: 4px;
+}
+
+.chat-text { font-size: 13.5px; line-height: 1.4; }
+.chat-detail { font-size: 11px; color: var(--text3); }
+.chat-reasoning-inline {
+  font-size: 10.5px;
+  font-style: italic;
+  color: var(--crimson);
+  opacity: 0.8;
+  border-top: 1px solid rgba(255,255,255,0.07);
+  padding-top: 4px;
+  margin-top: 2px;
+  line-height: 1.4;
+}
+.chat-time { font-size: 10px; opacity: 0.4; align-self: flex-end; margin-top: 2px; }
+
+.chat-typing-bubble {
+  display: flex !important;
+  align-items: center;
+  padding: 12px 16px !important;
+  min-width: 90px;
+}
+.chat-typing-label { font-size: 11px; color: var(--text3); margin-left: 8px; font-style: italic; }
+
+.chat-sys-msg {
+  text-align: center;
+  font-size: 11px;
+  color: var(--text3);
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  padding: 4px 14px;
+  align-self: center;
+  letter-spacing: 0.04em;
+  animation: bubble-in 0.35s var(--ease-out) both;
+}
+.chat-sys-agreed {
+  color: #4ade80;
+  border-color: rgba(74,222,128,0.3);
+  background: rgba(74,222,128,0.07);
+  font-weight: 500;
+}
+.chat-sys-failed {
+  color: var(--crimson);
+  border-color: var(--crimson-dim);
+  background: rgba(196,18,48,0.06);
+}
+
+/* Chat offer bar */
+.chat-offer-bar {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px 24px;
+  margin-top: 8px;
+}
+.chat-offer-bar-title {
+  font-size: 12px;
+  color: var(--text2);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+.chat-offer-hint {
+  font-size: 12px;
+  color: var(--gold);
+  margin-bottom: 12px;
+  opacity: 0.9;
+}
+.chat-offer-inputs {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.chat-offer-input {
+  width: 160px;
+  background: var(--surface3);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  color: var(--white);
+  font-size: 20px;
+  font-family: var(--font-display);
+  font-style: italic;
+  padding: 9px 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.chat-offer-input:focus { border-color: var(--gold); }
+.chat-offer-unit { font-size: 18px; color: var(--gold); font-style: italic; }
+.chat-offer-send {
+  background: var(--gold);
+  color: var(--black);
+  border: none;
+  border-radius: 10px;
+  padding: 10px 22px;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  letter-spacing: 0.04em;
+}
+.chat-offer-send:hover { filter: brightness(1.1); transform: scale(1.03); }
+
+.chat-offer-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.chat-action-btn {
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text2);
+  border-radius: 8px;
+  padding: 7px 14px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: var(--font-body);
+}
+.chat-action-btn:hover { border-color: var(--text2); color: var(--white); }
+.chat-action-auto { border-color: var(--gold); color: var(--gold); }
+.chat-action-auto:hover { background: var(--gold-dim); }
+.chat-action-withdraw { border-color: #8b6914; color: #c9a84c; }
+.chat-action-withdraw:hover { background: rgba(201,168,76,0.08); }
+.chat-action-cancel { }
+.chat-action-cancel:hover { border-color: var(--crimson); color: var(--crimson); }
+
+/* ================================================================
+   NEGO THINKING INDICATOR
+   ================================================================ */
+.nego-thinking {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--gold);
+  font-style: italic;
+  margin: 8px 0 4px;
+  opacity: 0.85;
+}
+.thinking-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--gold);
+  animation: thinking-bounce 1.2s infinite ease-in-out;
+}
+.thinking-dot:nth-child(2) { animation-delay: 0.2s; }
+.thinking-dot:nth-child(3) { animation-delay: 0.4s; }
+@keyframes thinking-bounce {
+  0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+  40%            { transform: scale(1);   opacity: 1; }
+}
+
+/* Config info box */
+.cfg-info-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-left: 3px solid var(--gold);
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-size: 12.5px;
+  color: var(--text2);
+  line-height: 1.6;
+  margin-bottom: 16px;
+}
+.cfg-info-icon {
+  font-size: 15px;
+  color: var(--gold);
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.cfg-info-box strong { color: var(--white); }
+
+/* ================================================================
    FEATURE 3 — AGENT REASONING
    ================================================================ */
 .agent-reasoning {
@@ -2912,9 +3240,15 @@ body.high-contrast .contrast-icon::before { content: '●'; }
   padding: 8px 12px;
   font-size: 12.5px;
   border-left: 2px solid var(--border);
+  animation: bubble-in 0.45s var(--ease-out) both;
 }
 .offer-bubble.buyer  { border-left-color: var(--gold); background: var(--gold-dim); }
 .offer-bubble.seller { border-left-color: var(--crimson); background: var(--crimson-dim); }
+
+@keyframes bubble-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
 
 .offer-price {
   font-family: var(--font-display);
