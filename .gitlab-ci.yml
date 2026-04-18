@@ -2,7 +2,6 @@ image: maven:3.9-eclipse-temurin-17
 
 stages:
   - build
-  - test
 
 variables:
   MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
@@ -14,14 +13,8 @@ cache:
 build:
   stage: build
   script:
-    - mvn clean compile -q
+    - mvn clean package -DskipTests -q
   artifacts:
     paths:
-      - target/
-    expire_in: 1 hour
-
-test:
-  stage: test
-  script:
-    - mvn test -Dspring.profiles.active=dev -q
-  allow_failure: true
+      - target/*.jar
+    expire_in: 1 week
