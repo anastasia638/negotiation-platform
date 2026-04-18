@@ -1,15 +1,30 @@
-# SA7 — Couture Marketplace
+<div align="center">
 
-![Language](https://img.shields.io/badge/language-Java%2017-ED8B00?style=flat-square&logo=openjdk)
-![Framework](https://img.shields.io/badge/framework-Spring%20Boot%203.2-6DB33F?style=flat-square&logo=springboot)
-![Database](https://img.shields.io/badge/database-PostgreSQL%2016-316192?style=flat-square&logo=postgresql)
-![Docker](https://img.shields.io/badge/container-Docker-2496ED?style=flat-square&logo=docker)
-![Security](https://img.shields.io/badge/security-Spring%20Security%20%2B%20JWT-6DB33F?style=flat-square&logo=spring)
-![Frontend](https://img.shields.io/badge/frontend-Vanilla%20JS%20SPA-F7DF1E?style=flat-square&logo=javascript)
+# ◆ SA7 — Couture Marketplace
 
-> Une marketplace de négociation multi-agents pour la mode de luxe — acheteurs et vendeurs interagissent via des protocoles de négociation structurés et stratégiques sur quatre types de marchés distincts.
+*Une marketplace de négociation multi-agents pour la mode de luxe*
 
-**Forge :** [forge.univ-lyon1.fr/p2308249/sa7-marketplace](https://forge.univ-lyon1.fr/p2308249/sa7-marketplace)
+<br/>
+
+[![Java](https://img.shields.io/badge/Java_17-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white)](https://openjdk.org/)
+[![Spring Boot](https://img.shields.io/badge/Spring_Boot_3.2-6DB33F?style=for-the-badge&logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL_16-316192?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
+[![JWT](https://img.shields.io/badge/JWT-000000?style=for-the-badge&logo=jsonwebtokens&logoColor=white)](https://jwt.io/)
+[![Vanilla JS](https://img.shields.io/badge/Vanilla_JS-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)](https://developer.mozilla.org/fr/docs/Web/JavaScript)
+
+<br/>
+
+[![Pipeline](https://forge.univ-lyon1.fr/p2308249/sa7-marketplace/badges/main/pipeline.svg)](https://forge.univ-lyon1.fr/p2308249/sa7-marketplace/-/pipelines)
+[![License: MIT](https://img.shields.io/badge/License-MIT-gold.svg?style=flat-square)](LICENSE)
+[![Forge](https://img.shields.io/badge/Forge_Lyon_1-p2308249-blueviolet?style=flat-square)](https://forge.univ-lyon1.fr/p2308249/sa7-marketplace)
+
+<br/>
+
+> Acheteurs et vendeurs autonomes interagissent via des protocoles de négociation structurés  
+> sur quatre types de marchés distincts — le tout dans une interface de luxe animée.
+
+</div>
 
 ---
 
@@ -42,13 +57,13 @@ Le projet illustre :
 
 ## Types de marchés
 
-| Marché | Description |
-|--------|-------------|
-| **Marché Centralisé** | Double enchère : les acheteurs montent leurs offres, les vendeurs baissent leurs prix ; convergence vers un équilibre |
-| **Marché Décentralisé** | Négociation bilatérale simultanée avec plusieurs vendeurs ; l'acheteur compare et choisit la meilleure offre |
-| **Achat Groupé** | Une coalition d'acheteurs mutualise la demande pour obtenir des remises sur volume |
-| **Négociation 1v1** | Négociation directe acheteur contre vendeur avec historique complet des rounds et graphique de convergence |
-| **Comparateur** | Simule les trois stratégies vendeur sur le même produit et compare les résultats côte à côte |
+| Marché | Mécanisme | Participants |
+|--------|-----------|-------------|
+| 🏛 **Marché Centralisé** | Double enchère — les acheteurs montent, les vendeurs baissent ; convergence vers l'équilibre | N acheteurs × N vendeurs |
+| 🔀 **Marché Décentralisé** | Négociation bilatérale simultanée ; l'acheteur compare et choisit la meilleure offre | 1 acheteur × N vendeurs |
+| 👥 **Achat Groupé** | Coalition d'acheteurs qui mutualise la demande pour obtenir des remises sur volume | N acheteurs × 1 vendeur |
+| 🎯 **Négociation 1v1** | Duel direct avec historique complet des rounds et graphique de convergence | 1 acheteur × 1 vendeur |
+| ⚖ **Comparateur** | Simulation des trois stratégies vendeur sur le même produit, résultats côte à côte | Analyse comparative |
 
 ---
 
@@ -64,7 +79,7 @@ Le projet illustre :
 ┌─────────────────────────▼────────────────────────────────────┐
 │                  Spring Boot 3.2                              │
 │  Controllers  →  Services  →  Repositories (JPA)             │
-│  Spring Security (JWT Bearer token)                          │
+│  Spring Security  ·  JWT Bearer token                        │
 └─────────────────────────┬────────────────────────────────────┘
                           │ JDBC / Hibernate
 ┌─────────────────────────▼────────────────────────────────────┐
@@ -82,79 +97,55 @@ Le projet illustre :
 sa7-marketplace/
 │
 ├── src/main/java/com/marketplace/
+│   ├── controller/        ← Couche HTTP — points d'entrée REST
+│   │   ├── ProductController.java          /api/products
+│   │   ├── UserController.java             /api/users
+│   │   ├── NegotiationController.java      /api/negotiations
+│   │   ├── OfferController.java            /api/negotiations/{id}/offers
+│   │   ├── HealthController.java           /api/health
+│   │   └── GlobalExceptionHandler.java     Erreurs unifiées
 │   │
-│   ├── controller/          ← Points d'entrée REST (couche HTTP)
-│   │   ├── ProductController.java        GET/POST/PUT/DELETE /api/products
-│   │   ├── UserController.java           GET/POST/PUT/DELETE /api/users
-│   │   ├── NegotiationController.java    POST/GET/PATCH      /api/negotiations
-│   │   ├── OfferController.java          POST/GET/PATCH      /api/negotiations/{id}/offers
-│   │   ├── HealthController.java         GET                 /api/health
-│   │   └── GlobalExceptionHandler.java   Réponses d'erreur unifiées
+│   ├── service/           ← Logique métier — protocole de négociation
+│   │   ├── NegotiationService.java         Protocole d'offres alternées
+│   │   └── OfferService.java               Accepter / refuser / contre-offre
 │   │
-│   ├── service/             ← Logique métier (règles de négociation, validation des offres)
-│   │   ├── ProductService.java
-│   │   ├── UserService.java
-│   │   ├── NegotiationService.java       ← Protocole d'offres alternées
-│   │   └── OfferService.java             ← Accepter / refuser / contre-offre
-│   │
-│   ├── repository/          ← Spring Data JPA (accès base de données)
-│   │   ├── ProductRepository.java
-│   │   ├── UserRepository.java
-│   │   ├── NegotiationRepository.java
-│   │   └── OfferRepository.java
-│   │
-│   ├── model/               ← Entités JPA
-│   │   ├── User.java         (BUYER | SELLER | ADMIN)
-│   │   ├── Product.java      (priceMin, priceMax, basePrice, stock)
-│   │   ├── Negotiation.java  (status, finalPrice, rounds)
-│   │   ├── Offer.java        (proposedPrice, quantity, roundNumber, status)
-│   │   ├── UserType.java
-│   │   ├── NegotiationStatus.java
-│   │   └── OfferStatus.java
-│   │
-│   ├── dto/                 ← Objets de transfert de données (payloads API)
-│   │   ├── ProductDTO.java
-│   │   ├── UserDTO.java
-│   │   ├── NegotiationDTO.java
-│   │   └── OfferDTO.java
-│   │
-│   └── MarketplaceApplication.java       ← Point d'entrée Spring Boot
+│   ├── repository/        ← Spring Data JPA — accès base de données
+│   ├── model/             ← Entités JPA (User, Product, Negotiation, Offer)
+│   ├── dto/               ← Objets de transfert (payloads API)
+│   └── MarketplaceApplication.java
 │
 ├── src/main/resources/
-│   ├── application.properties            ← Config de base (port 8080, profil=dev)
-│   ├── application-dev.properties        ← H2 en mémoire, DDL auto-create
-│   ├── application-prod.properties       ← PostgreSQL, migrations Flyway
-│   ├── data.sql                          ← Données initiales (utilisateurs, produits)
-│   └── db/migration/
-│       └── V1__init.sql                  ← Création du schéma par Flyway
+│   ├── application-dev.properties          H2 en mémoire, DDL auto
+│   ├── application-prod.properties         PostgreSQL + Flyway
+│   ├── data.sql                            Données initiales
+│   └── db/migration/V1__init.sql           Schéma Flyway
 │
-├── src/main/resources/static/            ← Frontend (SPA servi par Spring Boot)
-│   ├── index.html                        ← Squelette : navbar, modales, balise script
-│   ├── app.js                            ← Tous les rendus de pages, helpers API, logique agents (~3800 lignes)
-│   └── style.css                         ← Système de design complet : tokens, layout, animations (~3600 lignes)
+├── src/main/resources/static/             ← Frontend SPA
+│   ├── index.html          Squelette : navbar, modales
+│   ├── app.js              Rendus de pages, helpers API, agents  (~3 800 lignes)
+│   └── style.css           Système de design, tokens, animations (~3 600 lignes)
 │
+├── .gitlab-ci.yml          Pipeline CI/CD (compile + test)
 ├── Dockerfile
 ├── docker-compose.yml
-├── .env.example
 └── pom.xml
 ```
 
 ### Retrouver une fonctionnalité dans `app.js`
 
-| Fonctionnalité | Chercher |
-|----------------|---------|
-| Routage des pages | `navigate(` / `const routes =` |
+| Fonctionnalité | Rechercher dans `app.js` |
+|----------------|--------------------------|
+| Routage des pages | `const routes =` |
 | Marché Centralisé | `renderMarcheCentralise` |
 | Marché Décentralisé | `renderMarcheDecentralise` |
 | Achat Groupé | `renderAchatGroupe` |
 | Négociation 1v1 | `renderNegociation1v1` |
 | Comparateur | `renderComparateur` |
-| Dashboard | `renderDashboard` |
+| Dashboard analytique | `renderDashboard` |
 | Concession acheteur | `buyerConcession(` |
 | Réponse automatique vendeur | `apiAutoRespond(` |
 | Graphique de convergence | `drawConvergenceChart(` |
-| Système de notation | `showRatingPrompt(` / `submitRating(` |
-| Liste de favoris | `sa7_wishlist` |
+| Système de notation | `showRatingPrompt(` |
 
 ---
 
@@ -172,7 +163,7 @@ sa7-marketplace/
 | Flyway | 9.x | Migrations de schéma |
 | Docker | latest | Conteneurisation |
 | Docker Compose | v3 | Orchestration multi-conteneurs |
-| Maven | 3.x | Outil de build et gestion des dépendances |
+| Maven | 3.x | Build et gestion des dépendances |
 | Vanilla JS | ES2020 | SPA frontend (sans framework) |
 
 ---
@@ -183,37 +174,31 @@ sa7-marketplace/
 
 - Java 17+
 - Maven 3.x
-- Docker & Docker Compose (pour le mode production)
+- Docker & Docker Compose *(mode production uniquement)*
 
-### Mode développement (H2 en mémoire, sans Docker)
+### Mode développement — H2 en mémoire, sans Docker
 
 ```bash
 # Cloner le dépôt
 git clone https://forge.univ-lyon1.fr/p2308249/sa7-marketplace.git
 cd sa7-marketplace
 
-# Lancer avec le profil dev (H2 crée le schéma automatiquement et charge data.sql)
+# Compiler et lancer avec le profil dev
 mvn clean compile
 mvn spring-boot:run -Dspring-boot.run.profiles=dev
-
-# Ouvrir dans le navigateur :
-# http://localhost:8080
 ```
 
-Le profil dev utilise une base H2 en mémoire — aucune dépendance externe requise. L'application se peuple automatiquement avec des utilisateurs et des produits au démarrage.
+L'application est disponible sur **http://localhost:8080**
 
-### Mode production avec Docker Compose (PostgreSQL)
+> Le profil `dev` utilise une base H2 en mémoire et se peuple automatiquement via `data.sql` — aucune configuration externe requise.
+
+### Mode production — PostgreSQL + Docker Compose
 
 ```bash
-# Copier et renseigner les variables d'environnement
 cp .env.example .env
-# Éditer .env : définir DB_PASSWORD et JWT_SECRET
+# Renseigner DB_PASSWORD et JWT_SECRET dans .env
 
-# Construire et démarrer tous les conteneurs
 docker-compose up --build
-
-# API + frontend disponibles sur :
-# http://localhost:8080
 ```
 
 ### Construire un JAR autonome
@@ -227,52 +212,52 @@ java -jar target/sa7-marketplace-*.jar --spring.profiles.active=dev
 
 ## Référence API
 
-Tous les endpoints sont préfixés `/api`. L'authentification utilise des **tokens JWT Bearer** — obtenir un token via `POST /api/auth/login`.
+Tous les endpoints sont préfixés `/api`. L'authentification utilise des **tokens JWT Bearer** obtenus via `POST /api/auth/login`.
 
 ### Santé
 
 | Méthode | Endpoint | Description |
 |---------|----------|-------------|
-| GET | `/api/health` | Vérification de disponibilité |
+| `GET` | `/api/health` | Vérification de disponibilité |
 
-### Utilisateurs
-
-| Méthode | Endpoint | Description |
-|---------|----------|-------------|
-| GET | `/api/users` | Lister tous les utilisateurs |
-| GET | `/api/users/{id}` | Obtenir un utilisateur par ID |
-| POST | `/api/users` | Créer un utilisateur |
-| PUT | `/api/users/{id}` | Modifier un utilisateur |
-| DELETE | `/api/users/{id}` | Supprimer un utilisateur |
-
-### Produits
+### Utilisateurs `/api/users`
 
 | Méthode | Endpoint | Description |
 |---------|----------|-------------|
-| GET | `/api/products` | Lister les produits (paginé) |
-| GET | `/api/products/{id}` | Obtenir un produit par ID |
-| POST | `/api/products` | Créer un produit |
-| PUT | `/api/products/{id}` | Modifier un produit |
-| DELETE | `/api/products/{id}` | Supprimer un produit |
+| `GET` | `/api/users` | Lister tous les utilisateurs |
+| `GET` | `/api/users/{id}` | Obtenir un utilisateur par ID |
+| `POST` | `/api/users` | Créer un utilisateur |
+| `PUT` | `/api/users/{id}` | Modifier un utilisateur |
+| `DELETE` | `/api/users/{id}` | Supprimer un utilisateur |
 
-### Négociations
-
-| Méthode | Endpoint | Description |
-|---------|----------|-------------|
-| POST | `/api/negotiations` | Ouvrir une négociation (acheteur + produit) |
-| GET | `/api/negotiations/{id}` | Statut et historique des offres |
-| GET | `/api/negotiations/buyer/{buyerId}` | Toutes les négociations d'un acheteur |
-| GET | `/api/negotiations/seller/{sellerId}` | Toutes les négociations d'un vendeur |
-| PATCH | `/api/negotiations/{id}/cancel` | Annuler une négociation |
-
-### Offres
+### Produits `/api/products`
 
 | Méthode | Endpoint | Description |
 |---------|----------|-------------|
-| GET | `/api/negotiations/{id}/offers` | Toutes les offres d'une négociation |
-| POST | `/api/negotiations/{id}/offers` | Soumettre une offre ou contre-offre |
-| PATCH | `/api/negotiations/{id}/offers/{offerId}/accept` | Accepter une offre |
-| PATCH | `/api/negotiations/{id}/offers/{offerId}/reject` | Refuser définitivement une offre |
+| `GET` | `/api/products` | Lister les produits (paginé) |
+| `GET` | `/api/products/{id}` | Obtenir un produit par ID |
+| `POST` | `/api/products` | Créer un produit |
+| `PUT` | `/api/products/{id}` | Modifier un produit |
+| `DELETE` | `/api/products/{id}` | Supprimer un produit |
+
+### Négociations `/api/negotiations`
+
+| Méthode | Endpoint | Description |
+|---------|----------|-------------|
+| `POST` | `/api/negotiations` | Ouvrir une négociation |
+| `GET` | `/api/negotiations/{id}` | Statut et historique des offres |
+| `GET` | `/api/negotiations/buyer/{buyerId}` | Négociations d'un acheteur |
+| `GET` | `/api/negotiations/seller/{sellerId}` | Négociations d'un vendeur |
+| `PATCH` | `/api/negotiations/{id}/cancel` | Annuler une négociation |
+
+### Offres `/api/negotiations/{id}/offers`
+
+| Méthode | Endpoint | Description |
+|---------|----------|-------------|
+| `GET` | `/api/negotiations/{id}/offers` | Toutes les offres |
+| `POST` | `/api/negotiations/{id}/offers` | Soumettre une offre |
+| `PATCH` | `.../offers/{offerId}/accept` | Accepter une offre |
+| `PATCH` | `.../offers/{offerId}/reject` | Refuser définitivement |
 
 ---
 
@@ -283,8 +268,8 @@ CREATE TABLE users (
   id         BIGSERIAL PRIMARY KEY,
   name       VARCHAR(255) NOT NULL,
   email      VARCHAR(255) NOT NULL UNIQUE,
-  user_type  VARCHAR(20) CHECK (user_type IN ('BUYER', 'SELLER', 'ADMIN')),
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  user_type  VARCHAR(20)  CHECK (user_type IN ('BUYER','SELLER','ADMIN')),
+  created_at TIMESTAMP    DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE products (
@@ -332,8 +317,8 @@ CREATE TABLE offers (
 - [x] Marché Centralisé — double enchère avec graphique de convergence
 - [x] Marché Décentralisé — négociation bilatérale multi-vendeurs
 - [x] Achat Groupé — achat coalitionnel avec dynamique de volume
-- [x] Négociation 1v1 — négociation directe humain contre agent
-- [x] Comparateur — comparaison des stratégies côte à côte
+- [x] Négociation 1v1 — duel humain contre agent
+- [x] Comparateur — comparaison des trois stratégies côte à côte
 
 ### Système d'agents
 - [x] Trois stratégies vendeur : Agressif, Conservateur, Adaptatif
@@ -347,14 +332,18 @@ CREATE TABLE offers (
 - [x] Liste de favoris avec persistance localStorage
 - [x] Historique des négociations avec export CSV
 - [x] Système de notation post-négociation (étoiles)
-- [x] Tableau de bord analytique avec statistiques stratégiques en direct
+- [x] Tableau de bord analytique avec statistiques en direct
 - [x] Panneau d'administration pour la gestion des utilisateurs et produits
 - [x] Bascule d'accessibilité contraste élevé
+- [x] Pipeline CI/CD (compilation + tests automatiques)
 
 ---
 
-## Auteur
+<div align="center">
 
 **Meriem Silmi** — Étudiante en Informatique, Université Claude Bernard Lyon 1
 
-[![Forge](https://img.shields.io/badge/Forge-p2308249-orange?style=flat-square)](https://forge.univ-lyon1.fr/p2308249/sa7-marketplace)
+[![Forge](https://img.shields.io/badge/Forge-p2308249/sa7--marketplace-blueviolet?style=for-the-badge&logo=gitlab)](https://forge.univ-lyon1.fr/p2308249/sa7-marketplace)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](LICENSE)
+
+</div>
