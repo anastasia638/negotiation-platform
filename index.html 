@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>SA7 Luxury Marketplace – Demo</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #0b0b0d;
+      color: #f5f5f0;
+    }
+    header {
+      padding: 20px 32px;
+      border-bottom: 1px solid #222;
+      background: #000;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 18px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    header p {
+      margin: 4px 0 0;
+      font-size: 12px;
+      color: #aaa;
+    }
+    .container {
+      max-width: 1000px;
+      margin: 32px auto 64px;
+      padding: 0 24px;
+    }
+    h2 {
+      font-size: 18px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 16px;
+    }
+    .card {
+      border: 1px solid #222;
+      padding: 16px 18px;
+      background: radial-gradient(circle at top, #181818, #050506);
+    }
+    .card h3 {
+      margin: 0 0 8px;
+      font-size: 16px;
+    }
+    .card .price {
+      font-size: 18px;
+      color: #d4af37;
+    }
+    .empty {
+      color: #888;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+<header>
+  <h1>SA7 LUXURY MARKETPLACE</h1>
+  <p>Demo visuelle – produits retournés par /api/products</p>
+</header>
+
+<div class="container">
+  <h2>Produits disponibles</h2>
+  <div id="productsGrid" class="grid">
+    <p class="empty">Chargement des produits...</p>
+  </div>
+</div>
+
+<script>
+  // adapte l'URL si besoin (127.0.0.1 ou localhost)
+  const API = "http://127.0.0.1:8080/api/products";
+
+  async function loadProducts() {
+    try {
+      const res = await fetch(API);
+      const products = await res.json();
+      const grid = document.getElementById("productsGrid");
+
+      if (!products.length) {
+        grid.innerHTML = '<p class="empty">Aucun produit pour l\'instant.</p>';
+        return;
+      }
+
+      grid.innerHTML = products.map(p => `
+        <article class="card">
+          <h3>${p.name}</h3>
+          <div class="price">${(p.basePrice ?? 0).toFixed(2)} €</div>
+        </article>
+      `).join("");
+    } catch (e) {
+      document.getElementById("productsGrid").innerHTML =
+        '<p class="empty">Erreur de chargement. Le backend tourne bien sur 8080 ?</p>';
+    }
+  }
+
+  loadProducts();
+</script>
+</body>
+</html>

@@ -15,7 +15,6 @@
 
 <br/>
 
-[![Pipeline](https://forge.univ-lyon1.fr/p2308249/sa7-marketplace/badges/main/pipeline.svg)](https://forge.univ-lyon1.fr/p2308249/sa7-marketplace/-/pipelines)
 [![License: MIT](https://img.shields.io/badge/License-MIT-gold.svg?style=flat-square)](LICENSE)
 [![Forge](https://img.shields.io/badge/Forge_Lyon_1-p2308249-blueviolet?style=flat-square)](https://forge.univ-lyon1.fr/p2308249/sa7-marketplace)
 
@@ -124,7 +123,6 @@ sa7-marketplace/
 │   ├── app.js              Rendus de pages, helpers API, agents  (~3 800 lignes)
 │   └── style.css           Système de design, tokens, animations (~3 600 lignes)
 │
-├── .gitlab-ci.yml          Pipeline CI/CD (compile + test)
 ├── Dockerfile
 ├── docker-compose.yml
 └── pom.xml
@@ -364,7 +362,6 @@ CREATE TABLE offers (
 - [x] Tableau de bord analytique avec statistiques en direct
 - [x] Panneau d'administration pour la gestion des utilisateurs et produits
 - [x] Bascule d'accessibilité contraste élevé
-- [x] Pipeline CI/CD (compilation + tests automatiques)
 
 ---
 
