@@ -112,9 +112,9 @@ body::after {
   align-items: center;
   justify-content: space-between;
   padding: 0 40px;
-  height: 64px;
-  background: rgba(3,3,3,0.94);
-  border-bottom: 1px solid var(--border);
+  height: 72px;
+  background: #3D0A0A;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
 }
@@ -127,14 +127,13 @@ body::after {
 }
 
 .brand-logo-img {
-  height: 48px;
+  height: 60px;
   width: auto;
   object-fit: contain;
   display: block;
-  filter: brightness(1.05);
   transition: opacity 0.2s;
 }
-.brand-logo-img:hover { opacity: 0.85; }
+.brand-logo-img:hover { opacity: 0.8; }
 
 .brand-diamond {
   color: var(--crimson);
@@ -489,7 +488,7 @@ body::after {
 }
 
 /* ==================== PAGE LAYOUT ==================== */
-main#app { padding-top: 64px; }
+main#app { padding-top: 72px; }
 
 .page {
   max-width: 1300px;
@@ -1205,7 +1204,7 @@ tr:hover td { background: rgba(255,255,255,0.018); }
 /* ==================== PROTOCOL SECTION ==================== */
 .protocol-section {
   margin-top: 90px;
-  padding-top: 64px;
+  padding-top: 72px;
   border-top: 1px solid var(--border);
 }
 
@@ -1748,7 +1747,7 @@ body.cur-click #cursor-ring {
 /* Wrapper — no padding-top, full width */
 .cfg-wrap {
   min-height: 100vh;
-  padding-top: 64px; /* navbar height */
+  padding-top: 72px; /* navbar height */
 }
 
 /* ---- CINEMATIC HERO ---- */
