@@ -49,9 +49,9 @@
 Contrairement à un e-commerce à prix fixe, chaque transaction passe par un **cycle de négociation complet** : offre initiale → tours de contre-offres → acceptation ou refus, selon un protocole d'offres alternées. Quatre structures de marché sont disponibles, chacune avec ses propres règles et comportements d'agents.
 
 Le projet illustre :
-- **Backend :** conception d'API REST, ORM JPA/Hibernate, authentification Spring Security + JWT, architecture en couches, migrations Flyway
+- **Backend :** conception d'API REST, ORM JPA/Hibernate, authentification Spring Security + JWT, architecture en couches (Controller → Service → Repository), validation des participants et des transitions d'état
 - **Frontend :** application monopage (vanilla JS), rendu dynamique, persistance localStorage, interface de négociation animée sous forme de chat
-- **Agents :** trois profils de stratégie vendeur (Agressif, Conservateur, Adaptatif) et logique de concession acheteur adaptée par stratégie
+- **Agents :** trois profils de stratégie vendeur (Agressif, Conservateur, Adaptatif) et logique de concession acheteur adaptée par stratégie active
 
 ---
 
@@ -84,7 +84,7 @@ Le projet illustre :
                           │ JDBC / Hibernate
 ┌─────────────────────────▼────────────────────────────────────┐
 │   PostgreSQL 16 (prod)  │  H2 en mémoire (dev)               │
-│   Migrations Flyway     │  données initiales data.sql         │
+│   schéma via Hibernate  │  données initiales data.sql         │
 └──────────────────────────────────────────────────────────────┘
         Tous les services tournent dans des conteneurs Docker Compose
 ```
@@ -116,9 +116,8 @@ sa7-marketplace/
 │
 ├── src/main/resources/
 │   ├── application-dev.properties          H2 en mémoire, DDL auto
-│   ├── application-prod.properties         PostgreSQL + Flyway
-│   ├── data.sql                            Données initiales
-│   └── db/migration/V1__init.sql           Schéma Flyway
+│   ├── application-prod.properties         PostgreSQL, schéma via Hibernate
+│   └── data.sql                            Données initiales (vendeurs, produits)
 │
 ├── src/main/resources/static/             ← Frontend SPA
 │   ├── index.html          Squelette : navbar, modales
@@ -133,15 +132,17 @@ sa7-marketplace/
 
 ### Retrouver une fonctionnalité dans `app.js`
 
+Les sections sont délimitées par des commentaires de la forme `//— NOM —`.
+
 | Fonctionnalité | Rechercher dans `app.js` |
 |----------------|--------------------------|
-| Routage des pages | `const routes =` |
-| Marché Centralisé | `renderMarcheCentralise` |
-| Marché Décentralisé | `renderMarcheDecentralise` |
-| Achat Groupé | `renderAchatGroupe` |
-| Négociation 1v1 | `renderNegociation1v1` |
+| Routage des pages | `//— ROUTER —` |
+| Marché Centralisé | `//— PAGE: MARCHÉ CENTRALISÉ —` |
+| Marché Décentralisé | `//— PAGE: MARCHÉ DÉCENTRALISÉ —` |
+| Achat Groupé | `//— PAGE: ACHAT GROUPÉ —` |
+| Négociation 1v1 | `//— PAGE: NÉGOCIATION 1V1 —` |
 | Comparateur | `renderComparateur` |
-| Dashboard analytique | `renderDashboard` |
+| Dashboard analytique | `//— FEATURE 4: DASHBOARD ANALYTIQUE —` |
 | Concession acheteur | `buyerConcession(` |
 | Réponse automatique vendeur | `apiAutoRespond(` |
 | Graphique de convergence | `drawConvergenceChart(` |
@@ -157,10 +158,9 @@ sa7-marketplace/
 | Spring Boot | 3.2 | Framework web, injection de dépendances |
 | Spring Data JPA | 3.2 | Couche ORM, pattern repository |
 | Spring Security | 6 | Authentification et autorisation |
-| JWT (jjwt) | 0.12.3 | Authentification sans état par token |
+| JWT (jjwt) | 0.12.3 | Tokens sans état (Bearer) |
 | PostgreSQL | 16 | Base de données relationnelle (production) |
 | H2 | — | Base de données en mémoire (développement) |
-| Flyway | 9.x | Migrations de schéma |
 | Docker | latest | Conteneurisation |
 | Docker Compose | v3 | Orchestration multi-conteneurs |
 | Maven | 3.x | Build et gestion des dépendances |
@@ -349,10 +349,11 @@ CREATE TABLE offers (
 - [x] Comparateur — comparaison des trois stratégies côte à côte
 
 ### Système d'agents
-- [x] Trois stratégies vendeur : Agressif, Conservateur, Adaptatif
-- [x] Logique de concession acheteur adaptée par stratégie active
+- [x] Trois stratégies vendeur : Agressif (`GREEDY`), Conservateur (`FRUGAL`), Adaptatif (`COOL_HEADED`)
+- [x] Logique de concession acheteur adaptée par stratégie active (`buyerConcession`)
+- [x] Validation des participants à chaque round (acheteur / vendeur uniquement)
 - [x] Suivi du taux de succès par stratégie (données réelles dans le Dashboard)
-- [x] Profils d'agents avec authentification JWT
+- [x] Profils d'agents avec authentification JWT automatique
 
 ### UX & Données
 - [x] Interface de chat animée pour tous les types de négociation
