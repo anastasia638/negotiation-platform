@@ -434,19 +434,27 @@ async function renderAccueil() {
         <div class="hp-vignette"></div>
 
         <div class="hp-logo" id="hp-logo">
-          <svg viewBox="0 0 540 420" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="MC Logo">
-            <!-- M: pearl white, elegant hairline serif -->
+          <svg viewBox="0 0 600 480" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="MC Logo">
+            <!-- ══ M — thin hairline strokes, architectural serif ══ -->
+            <!-- Main M skeleton: left leg → inner-left diagonal → inner-right diagonal → right leg -->
             <path id="hp-m-main"
-              d="M 88,392 L 88,32 L 265,296 L 442,32 L 442,392"
-              stroke="#ede4d8" stroke-width="14" stroke-linecap="square" stroke-linejoin="miter" fill="none"/>
-            <path class="hp-serif" d="M 55,32 L 121,32"   stroke="#ede4d8" stroke-width="8.5" stroke-linecap="butt" fill="none"/>
-            <path class="hp-serif" d="M 409,32 L 475,32"  stroke="#ede4d8" stroke-width="8.5" stroke-linecap="butt" fill="none"/>
-            <path class="hp-serif" d="M 55,392 L 121,392" stroke="#ede4d8" stroke-width="8.5" stroke-linecap="butt" fill="none"/>
-            <path class="hp-serif" d="M 409,392 L 475,392" stroke="#ede4d8" stroke-width="8.5" stroke-linecap="butt" fill="none"/>
-            <!-- C: pure white, cursive opening RIGHT, with CSS glow -->
+              d="M 78,452 L 78,28 L 264,318 L 450,28 L 450,452"
+              stroke="#ede4d8" stroke-width="12" stroke-linecap="square" stroke-linejoin="miter" fill="none"/>
+            <!-- Top serifs -->
+            <path class="hp-serif" d="M 50,28 L 106,28"  stroke="#ede4d8" stroke-width="7.5" stroke-linecap="butt" fill="none"/>
+            <path class="hp-serif" d="M 422,28 L 478,28" stroke="#ede4d8" stroke-width="7.5" stroke-linecap="butt" fill="none"/>
+            <!-- Bottom serifs -->
+            <path class="hp-serif" d="M 50,452 L 106,452"  stroke="#ede4d8" stroke-width="7.5" stroke-linecap="butt" fill="none"/>
+            <path class="hp-serif" d="M 422,452 L 478,452" stroke="#ede4d8" stroke-width="7.5" stroke-linecap="butt" fill="none"/>
+
+            <!-- ══ C — cursive, written top→bottom, opening to the RIGHT ══ -->
+            <!-- 2-arc bezier: starts top-right, sweeps far left, returns bottom-right + tail -->
             <path id="hp-c-path"
-              d="M 458,102 C 458,46 252,42 228,198 C 204,354 318,428 460,422 C 478,418 494,400 486,374"
-              stroke="#ffffff" stroke-width="13" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+              d="M 468,96
+                 C 468,28 192,24 170,230
+                 C 148,436 308,504 468,480
+                 C 490,473 518,448 506,412"
+              stroke="#ffffff" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
           </svg>
         </div>
 

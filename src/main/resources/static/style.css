@@ -514,37 +514,37 @@ body::after {
 }
 
 .hp-logo svg {
-  width: min(72vw, 400px);
+  width: min(74vw, 420px);
   height: auto;
   display: block;
 }
 
 @keyframes hp-logo-rise {
   from { transform: translate(-50%, -50%) scale(1); }
-  to   { transform: translate(-50%, calc(-50% - 25vh)) scale(0.29); }
+  to   { transform: translate(-50%, calc(-50% - 25vh)) scale(0.28); }
 }
 
 /* ── M stroke draw ── */
 #hp-m-main {
-  stroke-dasharray: 1650;
-  stroke-dashoffset: 1650;
-  animation: hp-draw 1.7s cubic-bezier(0.4, 0, 0.2, 1) 0.2s forwards;
+  stroke-dasharray: 1750;
+  stroke-dashoffset: 1750;
+  animation: hp-draw 1.8s cubic-bezier(0.4, 0, 0.2, 1) 0.2s forwards;
 }
 
-/* ── M serifs draw (each independently, same timing) ── */
+/* ── M serifs (all 4 fire together) ── */
 .hp-serif {
   stroke-dasharray: 80;
   stroke-dashoffset: 80;
-  animation: hp-draw 0.45s ease-out 1.6s forwards;
+  animation: hp-draw 0.4s ease-out 1.7s forwards;
 }
 
-/* ── C cursive draw — pure white + signature glow ── */
+/* ── C cursive draw — pure white, glow, after M ── */
 #hp-c-path {
-  stroke-dasharray: 1350;
-  stroke-dashoffset: 1350;
-  animation: hp-draw 1.35s cubic-bezier(0.25, 0.1, 0.25, 1) 1.85s forwards;
-  filter: drop-shadow(0 0 5px rgba(255,255,255,0.38))
-          drop-shadow(0 0 14px rgba(255,255,255,0.14));
+  stroke-dasharray: 1500;
+  stroke-dashoffset: 1500;
+  animation: hp-draw 1.5s cubic-bezier(0.25, 0.1, 0.25, 1) 1.95s forwards;
+  filter: drop-shadow(0 0 6px rgba(255,255,255,0.40))
+          drop-shadow(0 0 18px rgba(255,255,255,0.15));
 }
 
 @keyframes hp-draw {
