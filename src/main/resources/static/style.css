@@ -453,14 +453,14 @@ body::after {
   position: relative;
   height: 100vh;
   width: 100%;
-  /* Black → dark burgundy cinematic gradient */
+  /* Almost black with deep burgundy undertone */
   background:
     linear-gradient(155deg,
-      #050000 0%,
-      #110000 22%,
-      #200000 45%,
-      #2b0000 68%,
-      #0d0000 100%
+      #010000 0%,
+      #060000 18%,
+      #0e0000 38%,
+      #190000 60%,
+      #060000 100%
     );
   overflow: hidden;
   display: flex;

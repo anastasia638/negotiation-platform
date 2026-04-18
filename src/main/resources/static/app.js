@@ -443,9 +443,9 @@ async function renderAccueil() {
             <path class="hp-serif" d="M 409,32 L 475,32"  stroke="#ede4d8" stroke-width="8.5" stroke-linecap="butt" fill="none"/>
             <path class="hp-serif" d="M 55,392 L 121,392" stroke="#ede4d8" stroke-width="8.5" stroke-linecap="butt" fill="none"/>
             <path class="hp-serif" d="M 409,392 L 475,392" stroke="#ede4d8" stroke-width="8.5" stroke-linecap="butt" fill="none"/>
-            <!-- C: pure white, slightly thicker, with CSS glow -->
+            <!-- C: pure white, cursive opening RIGHT, with CSS glow -->
             <path id="hp-c-path"
-              d="M 448,112 C 520,74 582,164 564,266 C 546,368 470,426 376,407 C 282,388 244,308 265,250 L 256,212"
+              d="M 458,102 C 458,46 252,42 228,198 C 204,354 318,428 460,422 C 478,418 494,400 486,374"
               stroke="#ffffff" stroke-width="13" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
           </svg>
         </div>
