@@ -431,19 +431,22 @@ async function renderAccueil() {
       <section class="hero-premium" id="hero-premium">
         <canvas class="hp-canvas" id="hp-canvas"></canvas>
         <div class="hp-ambient"></div>
+        <div class="hp-vignette"></div>
 
         <div class="hp-logo" id="hp-logo">
           <svg viewBox="0 0 540 420" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="MC Logo">
+            <!-- M: pearl white, elegant hairline serif -->
             <path id="hp-m-main"
               d="M 88,392 L 88,32 L 265,296 L 442,32 L 442,392"
-              stroke="#f0e8e0" stroke-width="14" stroke-linecap="square" stroke-linejoin="miter" fill="none"/>
-            <path class="hp-serif" d="M 58,32 L 118,32"   stroke="#f0e8e0" stroke-width="9" stroke-linecap="butt" fill="none"/>
-            <path class="hp-serif" d="M 412,32 L 472,32"  stroke="#f0e8e0" stroke-width="9" stroke-linecap="butt" fill="none"/>
-            <path class="hp-serif" d="M 58,392 L 118,392" stroke="#f0e8e0" stroke-width="9" stroke-linecap="butt" fill="none"/>
-            <path class="hp-serif" d="M 412,392 L 472,392" stroke="#f0e8e0" stroke-width="9" stroke-linecap="butt" fill="none"/>
+              stroke="#ede4d8" stroke-width="14" stroke-linecap="square" stroke-linejoin="miter" fill="none"/>
+            <path class="hp-serif" d="M 55,32 L 121,32"   stroke="#ede4d8" stroke-width="8.5" stroke-linecap="butt" fill="none"/>
+            <path class="hp-serif" d="M 409,32 L 475,32"  stroke="#ede4d8" stroke-width="8.5" stroke-linecap="butt" fill="none"/>
+            <path class="hp-serif" d="M 55,392 L 121,392" stroke="#ede4d8" stroke-width="8.5" stroke-linecap="butt" fill="none"/>
+            <path class="hp-serif" d="M 409,392 L 475,392" stroke="#ede4d8" stroke-width="8.5" stroke-linecap="butt" fill="none"/>
+            <!-- C: pure white, slightly thicker, with CSS glow -->
             <path id="hp-c-path"
-              d="M 446,116 C 516,80 574,168 558,264 C 542,360 468,420 378,402 C 288,384 250,308 270,252 L 262,216"
-              stroke="#f0e8e0" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+              d="M 448,112 C 520,74 582,164 564,266 C 546,368 470,426 376,407 C 282,388 244,308 265,250 L 256,212"
+              stroke="#ffffff" stroke-width="13" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
           </svg>
         </div>
 
