@@ -3,7 +3,7 @@
    Connecté à Spring Boot API sur le même serveur (port 8080)
    ================================================================ */
 
-// ==================== CONFIG ====================
+//— CONFIG —
 const API = '';   // même origine → pas de CORS
 
 const AGENT_PROFILES = [
@@ -19,7 +19,7 @@ const CATEGORY_EMOJI = {
   perfumes: '🌹', shoes: '👠', default: '💎'
 };
 
-// ==================== PRODUCT IMAGES (Unsplash) ====================
+//— PRODUCT IMAGES (Unsplash) —
 // Photos choisies pour correspondre exactement à chaque produit
 const PRODUCT_IMAGES = {
   // Sacs
@@ -66,7 +66,7 @@ function getProductImage(product) {
 
 const CONDITIONS = ['Excellent', 'Très bon', 'Bon'];
 
-// ==================== STATE ====================
+//— STATE —
 const S = {
   activeAgent:     null,   // { id, name, email, strategy, strategyKey, budget, solde }
   token:           localStorage.getItem('sa7_token') || null,
@@ -98,7 +98,7 @@ try {
   if (saved) S.activeAgent = JSON.parse(saved);
 } catch(e) {}
 
-// ==================== STRATÉGIE ACHETEUR — concession adaptative ====================
+//— STRATÉGIE ACHETEUR — concession adaptative —
 // Calcule la prochaine offre selon la stratégie réelle de l'agent actif.
 // FRUGAL : petits pas (+2-3%), ne cède qu'un tiers de l'écart
 // COOL_HEADED : midpoint classique (+5%)
@@ -121,7 +121,7 @@ function buyerConcession(current, lowestCounter) {
   }
 }
 
-// ==================== STATS — enregistrement réel par stratégie ====================
+//— STATS — enregistrement réel par stratégie —
 function recordNegoStat(result /* 'AGREED' | 'FAILED' */) {
   const strat = S.activeAgent?.strategyKey || 'COOL_HEADED';
   const stats = JSON.parse(localStorage.getItem('sa7_strat_stats') || '[]');
@@ -129,7 +129,7 @@ function recordNegoStat(result /* 'AGREED' | 'FAILED' */) {
   localStorage.setItem('sa7_strat_stats', JSON.stringify(stats.slice(-500)));
 }
 
-// ==================== RATING — notation post-accord ====================
+//— RATING — notation post-accord —
 function showRatingPrompt(context /* {product, seller, finalPrice, market} */) {
   const existing = document.getElementById('rating-prompt');
   if (existing) existing.remove();
@@ -175,7 +175,7 @@ window.submitRating = function(value, product, seller, finalPrice, market) {
   toast(`Note enregistrée : ${'★'.repeat(value)}${'☆'.repeat(5-value)}`, 'success');
 };
 
-// ==================== HTTP HELPERS ====================
+//— HTTP HELPERS —
 async function http(method, path, body) {
   const opts = {
     method,
@@ -197,7 +197,7 @@ const get  = (path)       => http('GET', path, null);
 const post = (path, body) => http('POST', path, body);
 const patch= (path, body) => http('PATCH', path, body);
 
-// ==================== API CALLS ====================
+//— API CALLS —
 async function apiLogin(email, password) {
   const data = await fetch('/api/auth/login', {
     method: 'POST',
@@ -248,7 +248,7 @@ async function apiRejectOffer(negoId, offerId) {
   return patch(`/api/negotiations/${negoId}/offers/${offerId}/reject`);
 }
 
-// ==================== UTILS ====================
+//— UTILS —
 function fmt(n) {
   if (!n && n !== 0) return '—';
   return Number(n).toLocaleString('fr-FR') + ' €';
@@ -305,7 +305,7 @@ function updateNavAgent() {
   }
 }
 
-// ==================== ROUTER ====================
+//— ROUTER —
 function navigate(page, params = {}) {
   S.currentPage = page;
   closeAllDropdowns();
@@ -342,7 +342,7 @@ function navigate(page, params = {}) {
   }
 }
 
-// ==================== NAVBAR ====================
+//— NAVBAR —
 function toggleDropdown(id) {
   const dd = document.getElementById('dd-' + id);
   const wasOpen = dd.classList.contains('open');
@@ -358,7 +358,7 @@ document.addEventListener('click', e => {
   if (!e.target.closest('.nav-dropdown')) closeAllDropdowns();
 });
 
-// ==================== PAGE: ACCUEIL ====================
+//— PAGE: ACCUEIL —
 async function renderAccueil() {
   setPage('accueil');
   const app = document.getElementById('app');
@@ -547,7 +547,7 @@ async function selectCustomAgent(i) {
   navigate('accueil');
 }
 
-// ==================== PAGE: MARKETPLACE ====================
+//— PAGE: MARKETPLACE —
 async function renderMarketplace() {
   setPage('marketplace');
   const app = document.getElementById('app');
@@ -715,7 +715,7 @@ async function renderMarketplace() {
   }
 }
 
-// ==================== PAGE: MARCHÉ DÉCENTRALISÉ ====================
+//— PAGE: MARCHÉ DÉCENTRALISÉ —
 async function renderMarcheDecentralise(params = {}) {
   const app = document.getElementById('app');
 
@@ -1409,7 +1409,7 @@ async function renderMarcheDecentralise(params = {}) {
   }
 }
 
-// ==================== PAGE: MARCHÉ CENTRALISÉ ====================
+//— PAGE: MARCHÉ CENTRALISÉ —
 async function renderMarcheCentralise() {
   const app = document.getElementById('app');
 
@@ -1543,7 +1543,7 @@ async function renderMarcheCentralise() {
 
       const selectedBuyers = buyers.slice(0, nbB);
 
-      // FIX: déduplication sur catProds déjà filtré par catégorie
+      // On déduplique par sellerId : un vendeur peut avoir plusieurs produits dans la catégorie
       const seenSellers = new Set();
       const selectedSellers = catProds.filter(p => {
         if (seenSellers.has(p.sellerId)) return false;
@@ -1718,7 +1718,7 @@ async function renderMarcheCentralise() {
             ${chartHtml}
           </div>` : ''}`;
 
-      // FIX Bug 1 : affiche le bon nombre de rounds
+      // Affiche le nombre de rounds réellement effectués (actualRound, pas la variable de boucle)
       toast(`Enchère terminée en ${actualRound} round(s) — ${transactions.length} transaction(s)`, 'success');
 
       if (transactions.length > 0) {
@@ -1739,8 +1739,7 @@ async function renderMarcheCentralise() {
   }
 }
 
-// ==================== PAGE: ACHAT GROUPÉ ====================
-// ==================== PAGE: ACHAT GROUPÉ ====================
+//— PAGE: ACHAT GROUPÉ —
 async function renderAchatGroupe() {
   const app = document.getElementById('app');
 
@@ -2103,9 +2102,7 @@ async function renderAchatGroupe() {
         agState.offers.push({ side:'buyer', price:buyerPrice, round:agState.round });
         bottomEl.innerHTML = `<div style="text-align:center;padding:20px;color:var(--grey);font-size:14px">⏳ Le vendeur réfléchit...</div>`;
 
-        try {
-          await apiMakeOffer(agState.negoId, leader.id, buyerPrice, qty);
-        } catch(e) { /* may already exist */ }
+        await apiMakeOffer(agState.negoId, leader.id, buyerPrice, qty);
 
         // typing indicator
         const typEl = document.createElement('div');
@@ -2222,7 +2219,7 @@ async function renderAchatGroupe() {
   }
 }
 
-// ==================== PAGE: NÉGOCIATION 1V1 ====================
+//— PAGE: NÉGOCIATION 1V1 —
 async function renderNegociation1v1(params = {}) {
   const app = document.getElementById('app');
 
@@ -2713,7 +2710,7 @@ async function renderNegociation1v1(params = {}) {
   }
 }
 
-// ==================== PAGE: HISTORIQUE ====================
+//— PAGE: HISTORIQUE —
 async function renderHistorique() {
   const app = document.getElementById('app');
 
@@ -2807,7 +2804,7 @@ async function renderHistorique() {
   }
 }
 
-// ==================== PAGE: PROFIL AGENT ====================
+//— PAGE: PROFIL AGENT —
 async function renderProfilAgent() {
   const app = document.getElementById('app');
 
@@ -2964,7 +2961,7 @@ async function renderProfilAgent() {
   }
 }
 
-// ==================== PAGE: ADMIN ====================
+//— PAGE: ADMIN —
 async function renderAdmin() {
   setPage('admin');
   const app = document.getElementById('app');
@@ -3106,7 +3103,7 @@ async function renderAdmin() {
   }
 }
 
-// ==================== CUSTOM CURSOR ====================
+//— CUSTOM CURSOR —
 function initCursor() {
   const dot  = document.getElementById('cursor-dot');
   const ring = document.getElementById('cursor-ring');
@@ -3152,7 +3149,7 @@ function initCursor() {
   document.addEventListener('mouseenter', () => { dot.style.opacity = '1'; ring.style.opacity = '1'; });
 }
 
-// ==================== PRELOADER — flash cinéma rapide ====================
+//— PRELOADER — flash cinéma rapide —
 function initPreloader(onDone) {
   const pl  = document.getElementById('preloader');
   const el1 = document.getElementById('pl-line1');
@@ -3174,7 +3171,7 @@ function initPreloader(onDone) {
   }, 440);
 }
 
-// ==================== SWING BAR ====================
+//— SWING BAR —
 function initSwingBar() {
   const bar = document.getElementById('swing-bar');
   if (!bar) return;
@@ -3197,7 +3194,7 @@ function initSwingBar() {
 window.scrollToTop    = () => window.scrollTo({ top: 0, behavior: 'smooth' });
 window.scrollToBottom = () => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
 
-// ==================== PAGE TRANSITION ====================
+//— PAGE TRANSITION —
 let _transitioning = false;
 
 async function pageTransition(callback) {
@@ -3217,7 +3214,7 @@ async function pageTransition(callback) {
   _transitioning = false;
 }
 
-// ==================== COUNTER ANIMATION ====================
+//— COUNTER ANIMATION —
 function animateCounter(el) {
   const raw = el.textContent.trim();
   const hasEuro = raw.includes('€') || raw.includes('€');
@@ -3260,7 +3257,7 @@ function initCounters() {
   document.querySelectorAll('.stat-value').forEach(el => observer.observe(el));
 }
 
-// ==================== WISHLIST ====================
+//— WISHLIST —
 
 function saveWishlist() {
   localStorage.setItem('sa7_wishlist', JSON.stringify([...S.wishlist]));
@@ -3370,7 +3367,7 @@ function renderWishlist() {
     });
 }
 
-// ==================== QUICK VIEW ====================
+//— QUICK VIEW —
 
 function openQuickView(productId) {
   const p = S.products.find(x => x.id === productId);
@@ -3431,7 +3428,7 @@ function closeQuickView() {
   document.body.style.overflow = '';
 }
 
-// ==================== HIGH CONTRAST ====================
+//— HIGH CONTRAST —
 
 function toggleHighContrast() {
   const isHC = document.body.classList.toggle('high-contrast');
@@ -3448,7 +3445,7 @@ function initHighContrast() {
   }
 }
 
-// ==================== ANIMATIONS & EFFECTS ====================
+//— ANIMATIONS & EFFECTS —
 
 function initScrollReveal() {
   const observer = new IntersectionObserver((entries) => {
@@ -3508,7 +3505,7 @@ function resetAppPadding() {
   if (app) app.style.paddingTop = '';
 }
 
-// ==================== FEATURE 1: CONVERGENCE CHART ====================
+//— FEATURE 1: CONVERGENCE CHART —
 function drawConvergenceChart(negotiations, maxRounds) {
   // Gather all prices for scale
   const allPrices = [];
@@ -3607,7 +3604,7 @@ function drawConvergenceChart(negotiations, maxRounds) {
   return `<div class="cv-chart">${output}</div>`;
 }
 
-// ==================== FEATURE 3: AGENT REASONING ====================
+//— FEATURE 3: AGENT REASONING —
 function agentReasoning(stratKey, round, maxRounds, buyerPrice, sellerPrice, priceMin, priceMax) {
   const pct = round / maxRounds;
   const gap = Math.round(sellerPrice - buyerPrice);
@@ -3639,7 +3636,7 @@ function agentReasoning(stratKey, round, maxRounds, buyerPrice, sellerPrice, pri
   }
 }
 
-// ==================== FEATURE 2: COMPARATEUR DE STRATÉGIES ====================
+//— FEATURE 2: COMPARATEUR DE STRATÉGIES —
 function simulateNego(stratKey, priceMin, priceMax, buyerStart, rounds) {
   const strats = {
     GREEDY:       { sellerStart: priceMax * 1.30, sellerDrop: 0.03 },
@@ -3728,7 +3725,7 @@ async function renderComparateur(params = {}) {
 }
 window.renderComparateur = renderComparateur;
 
-// ==================== FEATURE 4: DASHBOARD ANALYTIQUE ====================
+//— FEATURE 4: DASHBOARD ANALYTIQUE —
 async function renderDashboard() {
   const app = document.getElementById('app');
 
@@ -3852,7 +3849,7 @@ async function renderDashboard() {
     </div>`;
 }
 
-// ==================== FEATURE 5: EXPORT CSV ====================
+//— FEATURE 5: EXPORT CSV —
 function exportHistoriqueCSV(negos, centralise) {
   const rows = [['#','Produit','Vendeur','Type','Prix Final','Rounds','Statut','Date']];
   negos.forEach((n,i) => rows.push([n.id, n.productName||'—', n.sellerName||'—', 'Décentralisé', n.finalPrice||'', n.offers?.length||'', n.status, n.startedAt ? new Date(n.startedAt).toLocaleDateString('fr-FR') : '']));
@@ -3866,7 +3863,7 @@ function exportHistoriqueCSV(negos, centralise) {
 }
 window.exportHistoriqueCSV = exportHistoriqueCSV;
 
-// ==================== FEATURE 7: REPLAY MODAL ====================
+//— FEATURE 7: REPLAY MODAL —
 function showReplayModal(productName, sellerName, priceMin, priceMax, finalPrice, rounds) {
   const modal = document.getElementById('quick-view-modal');
   if (!modal) return;
@@ -3925,7 +3922,7 @@ function showReplayModal(productName, sellerName, priceMin, priceMax, finalPrice
 }
 window.showReplayModal = showReplayModal;
 
-// ==================== INIT ====================
+//— INIT —
 window.navigate         = navigate;
 window.openQuickView    = openQuickView;
 window.closeQuickView   = closeQuickView;

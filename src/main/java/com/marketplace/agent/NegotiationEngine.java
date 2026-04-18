@@ -86,9 +86,13 @@ public class NegotiationEngine {
                 maxRounds
         );
 
-        User responder = responderId.equals(negotiation.getBuyer().getId())
-                ? negotiation.getBuyer()
-                : negotiation.getSeller();
+        boolean isBuyer  = responderId.equals(negotiation.getBuyer().getId());
+        boolean isSeller = responderId.equals(negotiation.getSeller().getId());
+        if (!isBuyer && !isSeller) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "L'utilisateur " + responderId + " ne participe pas à cette négociation");
+        }
+        User responder = isBuyer ? negotiation.getBuyer() : negotiation.getSeller();
 
         switch (decision.getAction()) {
             case ACCEPT -> {
