@@ -424,9 +424,8 @@ async function renderAccueil() {
         <div class="hero-bg" id="hero-bg">${slidesHtml}</div>
         <div class="hero-overlay"></div>
         <div class="hero-content">
-          <p class="hero-quote">Vos envies de luxe, nos agents s'occupent du prix.</p>
           <h1 class="hero-title">Couture<br>Marketplace</h1>
-          <p class="hero-sub">Intelligence Artificielle · Négociation Automatique · Luxe</p>
+          <p class="hero-sub">Vos envies de luxe, nos agents s'occupent du prix.</p>
           <div class="hero-actions">
             <button class="btn btn-primary btn-lg" onclick="document.getElementById('agents-section').scrollIntoView({behavior:'smooth'})">Choisir un agent</button>
             <button class="btn btn-outline btn-lg" onclick="navigate('marketplace')">Explorer</button>
