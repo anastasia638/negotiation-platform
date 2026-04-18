@@ -19,43 +19,80 @@ const CATEGORY_EMOJI = {
   perfumes: '🌹', shoes: '👠', default: '💎'
 };
 
-//— PRODUCT IMAGES (Unsplash) —
-// Photos choisies pour correspondre exactement à chaque produit
+//— PRODUCT IMAGES —
 const PRODUCT_IMAGES = {
-  // Sacs
-  'Chanel Classic Flap Vintage':     '/images/chanel-flap.jpg', // Chanel quilted black bag
-  'Louis Vuitton Neverfull MM':      '/images/lv-neverfull.jpg', // LV monogram tote
-  'Hermès Birkin 30':                '/images/hermes-birkin.jpg', // Hermès orange/tan leather
-  'Prada Re-Edition 2000':           '/images/prada-reedition.jpg', // nylon mini bag
-  'Balenciaga City Bag':             '/images/balenciaga-city.jpg', // dark leather city bag
-  // Montres
-  'Rolex Datejust 36':               '/images/rolex-datejust.jpg', // silver Rolex datejust
-  'Cartier Tank Française':          '/images/cartier-tank.jpg', // rectangular Cartier
-  'Hermès Cape Cod Watch':           '/images/hermes-capecod.jpg', // square luxury watch
-  // Vêtements
-  'Dior Bar Jacket':                 '/images/dior-jacket.jpg', // couture jacket editorial
-  'Gucci Silk Maxi Dress':           '/images/gucci-dress.jpg', // silk long dress editorial
-  // Parfum
-  'Chanel No.5 Parfum 100ml':        '/images/chanel-no5.jpg', // flacon Chanel No.5
-  // Chaussures
-  'Christian Louboutin Pigalle 120': '/images/louboutin-pigalle.jpg', // red sole stilettos
+  // Bags
+  'Chanel Classic Flap Vintage':                        '/images/chanel-flap-classic.png',
+  'Louis Vuitton Neverfull MM':                         '/images/lv-capucines.png',
+  'Hermès Birkin 30':                                   '/images/hermes-birkin-30.png',
+  'Prada Re-Edition 2000':                              '/images/prada-reedition.jpg',
+  'Balenciaga City Bag':                                '/images/balenciaga-city.jpg',
+  'Hermès Kelly 20 Sellier Framboise & Doblis Suede Noir': '/images/hermes-kelly-framboise.png',
+  'Chanel Classic Flap Cherry Red Medium':              '/images/chanel-flap-denim.png',
+  'Chanel 25 Classic Flap Black':                       '/images/chanel-25-black.png',
+  'Lady Dior Cherry Red Medium':                        '/images/lady-dior.png',
+  'Miu Miu Black Leather Aventure Satchel':             '/images/ysl-bag.png',
+  'Hermès Birkin 25 Cherry Red Crocodile':              '/images/hermes-birkin-25-red.png',
+  // Watches
+  'Rolex Datejust 36':               '/images/rolex-datejust-new.png',
+  'Cartier Tank Française':          '/images/cartier-tank.jpg',
+  'Hermès Cape Cod Watch':           '/images/hermes-capecod.jpg',
+  'Bvlgari Serpenti Seduttori':      '/images/bvlgari-serpenti.png',
+  'Cartier Panthère de Cartier':     '/images/cartier-panthere.png',
+  'Rolex Lady-Datejust 28':          '/images/rolex-datejust-new.png',
+  'Cartier Tank Louis':              '/images/cartier-tank-louis.png',
+  'Richard Mille RM 07-01':          '/images/richard-mille-rm07.png',
+  'Audemars Piguet Royal Oak Lady':  '/images/rolex-datejust.jpg',
+  'Patek Philippe Calatrava':        '/images/patek-calatrava.png',
+  'IWC Portugieser Chronograph':     '/images/cartier-tank.jpg',
+  'Jaeger-LeCoultre Reverso':        '/images/hermes-capecod.jpg',
+  'Omega Constellation 38mm':        '/images/rolex-datejust.jpg',
+  // Clothing
+  'Dior Bar Jacket':           '/images/dior-jacket-new.png',
+  'Gucci Silk Maxi Dress':     '/images/chanel-dress.png',
+  'Valentino Cape Blazer':     '/images/miumiu-cardigan.png',
+  'Balenciaga Oversized Coat': '/images/lv-pants.png',
+  'Bottega Veneta Knit Dress': '/images/miumiu-cardigan.png',
+  'Prada Nylon Windbreaker':   '/images/prada-skirt.png',
+  // Perfumes
+  'Chanel No.5 Parfum 100ml':                       '/images/chanel-no5.jpg',
+  'Vanilla Powder Intense — Matière Première':       '/images/vanilla-powder.png',
+  'Byredo Mojave Ghost Intense':                     '/images/chanel-no5.jpg',
+  'Le Labo Santal 33':                               '/images/chanel-no5.jpg',
+  'Guerlain Absolus Allegoria Rose Amira':            '/images/chanel-no5.jpg',
+  'Baccarat Rouge 540 — Maison Francis Kurkdjian':   '/images/chanel-no5.jpg',
+  'Parfum de Marly Athalia':                         '/images/parfum-marly-athalia.png',
+  'Tom Ford Oud Wood 100ml':                         '/images/tom-ford-oud.png',
+  'Creed Aventus 100ml':                             '/images/chanel-no5.jpg',
+  'Xerjoff Naxos 100ml':                             '/images/chanel-no5.jpg',
+  'Amouage Interlude Man 100ml':                     '/images/chanel-no5.jpg',
+  // Shoes
+  'Christian Louboutin Pigalle 120':  '/images/louboutin-new.png',
+  'Christian Louboutin So Kate 120':  '/images/louboutin-new.png',
+  'Miu Miu x New Balance Sneakers':   '/images/miumiu-nb.png',
+  'Miu Miu Cherry Red Kitten Heels':  '/images/miumiu-kitten.png',
+  'YSL Opyum Black Heels':            '/images/ysl-heels.png',
+  'Cesare Paciotti Crystal Heels':    '/images/cesare-paciotti.png',
+  'Jimmy Choo Azia 100 Heels':        '/images/jimmy-choo-new.png',
+  'Manolo Blahnik Hangisi 105':       '/images/louboutin-new.png',
+  'Roger Vivier Buckle Heels':        '/images/ysl-heels.png',
+  'Aquazzura Coquette 105':           '/images/miumiu-kitten.png',
+  'Gianvito Rossi Plexi 105':         '/images/cesare-paciotti.png',
 };
 
 const CATEGORY_IMAGES = {
-  bags:     '/images/chanel-flap.jpg',
-  watches:  '/images/rolex-datejust.jpg',
-  clothing: '/images/dior-jacket.jpg',
+  bags:     '/images/chanel-flap-classic.png',
+  watches:  '/images/rolex-datejust-new.png',
+  clothing: '/images/dior-jacket-new.png',
   perfumes: '/images/chanel-no5.jpg',
-  shoes:    '/images/louboutin-pigalle.jpg',
+  shoes:    '/images/louboutin-new.png',
   default:  '/images/hero-1.jpg',
 };
 
-// Hero background images — dark editorial, palette noir/rouge/or
+// Hero background images
 const HERO_IMAGES = [
-  '/images/hero-1.jpg',  // runway dark couture
-  '/images/hero-2.jpg',  // editorial black
-  '/images/hero-3.jpg',  // fashion dark
-  '/images/hero-4.jpg',  // luxury moody
+  '/images/hero-1.jpg',
+  '/images/hero-4.jpg',
 ];
 
 function getProductImage(product) {
