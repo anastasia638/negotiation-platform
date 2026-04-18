@@ -4,10 +4,11 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 
 /**
- * Stratégie FRUGAL — utilisée par les ACHETEURS.
+ * Stratégie FRUGAL — utilisée par les VENDEURS coopératifs (Sophie, Meriem).
  *
- * Comportement : vise le prix minimum, monte très lentement (3% par round).
- * Patient — accepte seulement si l'offre est proche du bas de la plage.
+ * Comportement : accepte rapidement des prix bas, contre-propose depuis le minimum
+ * et monte lentement (+3% de la plage par round).
+ * Objectif : vendre vite plutôt que maximiser le prix.
  */
 public class FrugalStrategy implements NegotiationStrategy {
 
@@ -35,7 +36,7 @@ public class FrugalStrategy implements NegotiationStrategy {
                 range.multiply(BigDecimal.valueOf(acceptanceThreshold))
         ).setScale(2, RoundingMode.HALF_UP);
 
-        if (offeredPrice.compareTo(threshold) <= 0) {
+        if (offeredPrice.compareTo(threshold) >= 0) {
             return StrategyDecision.accept();
         }
 
@@ -46,8 +47,8 @@ public class FrugalStrategy implements NegotiationStrategy {
                 range.multiply(BigDecimal.valueOf(counterRatio))
         ).setScale(2, RoundingMode.HALF_UP);
 
-        // Si la contre-offre est <= au prix proposé, accepter directement
-        if (counterPrice.compareTo(offeredPrice) <= 0) {
+        // Vendeur frugal : si l'acheteur propose plus que ma contre-offre, j'accepte
+        if (offeredPrice.compareTo(counterPrice) >= 0) {
             return StrategyDecision.accept();
         }
 

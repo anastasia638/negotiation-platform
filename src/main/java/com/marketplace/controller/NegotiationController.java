@@ -59,11 +59,12 @@ public class NegotiationController {
     }
 
     // Réponse automatique par un agent avec une stratégie
-    // POST /api/negotiations/{id}/auto-respond?responderId=2&strategy=GREEDY
+    // POST /api/negotiations/{id}/auto-respond?responderId=2&strategy=GREEDY&maxRounds=10
     @PostMapping("/{id}/auto-respond")
     public NegotiationDTO autoRespond(@PathVariable Long id,
                                       @RequestParam Long responderId,
-                                      @RequestParam String strategy) {
-        return negotiationEngine.autoRespond(id, responderId, strategy);
+                                      @RequestParam String strategy,
+                                      @RequestParam(defaultValue = "10") int maxRounds) {
+        return negotiationEngine.autoRespond(id, responderId, strategy, maxRounds);
     }
 }

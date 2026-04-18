@@ -28,7 +28,7 @@ public class Negotiation {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private NegotiationStatus status = NegotiationStatus.PENDING;
+    private NegotiationStatus status = NegotiationStatus.NEGOTIATING;
 
     @Column(name = "final_price", precision = 10, scale = 2)
     private BigDecimal finalPrice;

@@ -26,8 +26,6 @@ import java.util.Optional;
 @Component
 public class NegotiationEngine {
 
-    private static final int MAX_ROUNDS = 10;
-
     private final NegotiationRepository negotiationRepository;
     private final OfferRepository offerRepository;
     private final NegotiationService negotiationService;
@@ -49,7 +47,7 @@ public class NegotiationEngine {
      * @return               DTO de la négociation mise à jour
      */
     @Transactional
-    public NegotiationDTO autoRespond(Long negotiationId, Long responderId, String strategyName) {
+    public NegotiationDTO autoRespond(Long negotiationId, Long responderId, String strategyName, int maxRounds) {
         Negotiation negotiation = negotiationRepository.findById(negotiationId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Négociation introuvable : " + negotiationId));
 
@@ -85,7 +83,7 @@ public class NegotiationEngine {
                 minPrice,
                 maxPrice,
                 lastOffer.getRoundNumber(),
-                MAX_ROUNDS
+                maxRounds
         );
 
         User responder = responderId.equals(negotiation.getBuyer().getId())
