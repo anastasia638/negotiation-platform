@@ -642,21 +642,23 @@ body::after {
 @media (max-width: 768px) {
   .hp-content { top: 44vh; }
   .hp-logo svg { width: min(82vw, 320px); }
+  .hp-logo { animation-name: hp-logo-rise-md; }
+}
 
-  @keyframes hp-logo-rise {
-    from { transform: translate(-50%, -50%) scale(1); }
-    to   { transform: translate(-50%, calc(-50% - 20vh)) scale(0.26); }
-  }
+@keyframes hp-logo-rise-md {
+  from { transform: translate(-50%, -50%) scale(1); }
+  to   { transform: translate(-50%, calc(-50% - 20vh)) scale(0.26); }
 }
 
 @media (max-width: 480px) {
   .hp-content { top: 46vh; }
   .hp-title { font-size: clamp(38px, 11vw, 60px); }
+  .hp-logo { animation-name: hp-logo-rise-sm; }
+}
 
-  @keyframes hp-logo-rise {
-    from { transform: translate(-50%, -50%) scale(1); }
-    to   { transform: translate(-50%, calc(-50% - 18vh)) scale(0.22); }
-  }
+@keyframes hp-logo-rise-sm {
+  from { transform: translate(-50%, -50%) scale(1); }
+  to   { transform: translate(-50%, calc(-50% - 18vh)) scale(0.22); }
 }
 
 /* ==================== TICKER ==================== */
@@ -825,16 +827,20 @@ main#app { padding-top: 72px; }
   overflow: hidden;
   background: var(--surface2);
   position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .product-img img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  object-position: center;
+  padding: 10px;
   display: block;
   transition: transform 0.7s var(--ease);
-  /* Dark palette treatment: brightness down, desaturate, boost contrast */
-  filter: brightness(0.7) contrast(1.15) saturate(0.55);
+  filter: brightness(0.82) contrast(1.08) saturate(0.65);
 }
 
 /* Red-gold color wash overlay on images */
@@ -2574,12 +2580,17 @@ body.cur-click #cursor-ring {
   aspect-ratio: 3/4;
   overflow: hidden;
   background: var(--surface2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .qv-img img {
   width: 100%; height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  object-position: center;
+  padding: 16px;
   display: block;
-  filter: brightness(0.75) contrast(1.1) saturate(0.5);
+  filter: brightness(0.82) contrast(1.08) saturate(0.55);
   transition: transform 0.7s var(--ease);
 }
 .qv-panel:hover .qv-img img { transform: scale(1.04); }
