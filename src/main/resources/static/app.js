@@ -433,7 +433,6 @@ async function renderAccueil() {
         </div>
         <div class="hero-dots" id="hero-dots">${dotsHtml}</div>
         <div class="hero-scroll">
-          <span>Défiler</span>
           <div class="hero-scroll-line"></div>
         </div>
       </section>

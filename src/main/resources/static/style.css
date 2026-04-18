@@ -450,7 +450,7 @@ body::after {
 
 /* ==================== TICKER ==================== */
 .ticker {
-  background: var(--crimson);
+  background: #250606;
   padding: 11px 0;
   overflow: hidden;
   white-space: nowrap;
@@ -464,8 +464,8 @@ body::after {
   width: 60px;
   z-index: 1;
 }
-.ticker::before { left: 0; background: linear-gradient(to right, var(--crimson), transparent); }
-.ticker::after  { right: 0; background: linear-gradient(to left, var(--crimson), transparent); }
+.ticker::before { left: 0; background: linear-gradient(to right, #250606, transparent); }
+.ticker::after  { right: 0; background: linear-gradient(to left, #250606, transparent); }
 
 .ticker-inner {
   display: inline-flex;
