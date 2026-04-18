@@ -23,39 +23,39 @@ const CATEGORY_EMOJI = {
 // Photos choisies pour correspondre exactement à chaque produit
 const PRODUCT_IMAGES = {
   // Sacs
-  'Chanel Classic Flap Vintage':     'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=600&q=85', // Chanel quilted black bag
-  'Louis Vuitton Neverfull MM':      'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=600&q=85', // LV monogram tote
-  'Hermès Birkin 30':                'https://images.unsplash.com/photo-1601924638867-3d8e59a9a694?w=600&q=85', // Hermès orange/tan leather
-  'Prada Re-Edition 2000':           'https://images.unsplash.com/photo-1566150905458-1bf1fc113f0d?w=600&q=85', // nylon mini bag
-  'Balenciaga City Bag':             'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=600&q=85', // dark leather city bag
+  'Chanel Classic Flap Vintage':     '/images/chanel-flap.jpg', // Chanel quilted black bag
+  'Louis Vuitton Neverfull MM':      '/images/lv-neverfull.jpg', // LV monogram tote
+  'Hermès Birkin 30':                '/images/hermes-birkin.jpg', // Hermès orange/tan leather
+  'Prada Re-Edition 2000':           '/images/prada-reedition.jpg', // nylon mini bag
+  'Balenciaga City Bag':             '/images/balenciaga-city.jpg', // dark leather city bag
   // Montres
-  'Rolex Datejust 36':               'https://images.unsplash.com/photo-1523170335258-f5ed11844a49?w=600&q=85', // silver Rolex datejust
-  'Cartier Tank Française':          'https://images.unsplash.com/photo-1587836374828-4dbafa94cf0e?w=600&q=85', // rectangular Cartier
-  'Hermès Cape Cod Watch':           'https://images.unsplash.com/photo-1547996160-81dfa63595aa?w=600&q=85', // square luxury watch
+  'Rolex Datejust 36':               '/images/rolex-datejust.jpg', // silver Rolex datejust
+  'Cartier Tank Française':          '/images/cartier-tank.jpg', // rectangular Cartier
+  'Hermès Cape Cod Watch':           '/images/hermes-capecod.jpg', // square luxury watch
   // Vêtements
-  'Dior Bar Jacket':                 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=600&q=85', // couture jacket editorial
-  'Gucci Silk Maxi Dress':           'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?w=600&q=85', // silk long dress editorial
+  'Dior Bar Jacket':                 '/images/dior-jacket.jpg', // couture jacket editorial
+  'Gucci Silk Maxi Dress':           '/images/gucci-dress.jpg', // silk long dress editorial
   // Parfum
-  'Chanel No.5 Parfum 100ml':        'https://images.unsplash.com/photo-1588776813677-77aaf5595b83?w=600&q=85', // flacon Chanel No.5
+  'Chanel No.5 Parfum 100ml':        '/images/chanel-no5.jpg', // flacon Chanel No.5
   // Chaussures
-  'Christian Louboutin Pigalle 120': 'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=600&q=85', // red sole stilettos
+  'Christian Louboutin Pigalle 120': '/images/louboutin-pigalle.jpg', // red sole stilettos
 };
 
 const CATEGORY_IMAGES = {
-  bags:     'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=600&q=85',
-  watches:  'https://images.unsplash.com/photo-1523170335258-f5ed11844a49?w=600&q=85',
-  clothing: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=600&q=85',
-  perfumes: 'https://images.unsplash.com/photo-1588776813677-77aaf5595b83?w=600&q=85',
-  shoes:    'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=600&q=85',
-  default:  'https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=600&q=85',
+  bags:     '/images/chanel-flap.jpg',
+  watches:  '/images/rolex-datejust.jpg',
+  clothing: '/images/dior-jacket.jpg',
+  perfumes: '/images/chanel-no5.jpg',
+  shoes:    '/images/louboutin-pigalle.jpg',
+  default:  '/images/hero-1.jpg',
 };
 
 // Hero background images — dark editorial, palette noir/rouge/or
 const HERO_IMAGES = [
-  'https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=1920&q=90',  // runway dark couture
-  'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=1920&q=90',  // editorial black
-  'https://images.unsplash.com/photo-1509631179647-0177331693ae?w=1920&q=90',  // fashion dark
-  'https://images.unsplash.com/photo-1536243298747-ea8874136d64?w=1920&q=90',  // luxury moody
+  '/images/hero-1.jpg',  // runway dark couture
+  '/images/hero-2.jpg',  // editorial black
+  '/images/hero-3.jpg',  // fashion dark
+  '/images/hero-4.jpg',  // luxury moody
 ];
 
 function getProductImage(product) {
