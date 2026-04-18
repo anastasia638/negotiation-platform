@@ -654,15 +654,18 @@ async function renderMarketplace() {
               </select>
             </div>
             <div class="filter-group">
-              <label>Prix (€)</label>
-              <div class="price-inputs">
-                <input type="number" class="price-input" placeholder="Min" min="0"
-                  value="${S.filterPriceMin > 0 ? S.filterPriceMin : ''}"
-                  oninput="S.filterPriceMin=parseInt(this.value)||0; reRenderGrid()">
-                <span class="price-input-sep">—</span>
-                <input type="number" class="price-input" placeholder="Max" min="0"
-                  value="${S.filterPriceMax < 99999 ? S.filterPriceMax : ''}"
-                  oninput="S.filterPriceMax=parseInt(this.value)||99999; reRenderGrid()">
+              <label>Prix — <span id="fp-label" style="color:var(--gold);font-style:italic;font-family:var(--font-display);letter-spacing:.02em;text-transform:none">${S.filterPriceMin > 0 ? S.filterPriceMin.toLocaleString('fr-FR') + '\u202f€' : '0'} — ${S.filterPriceMax < 99999 ? S.filterPriceMax.toLocaleString('fr-FR') + '\u202f€' : '∞'}</span></label>
+              <div class="fp-slider-wrap">
+                <div class="fp-track"></div>
+                <div class="fp-fill" id="fp-fill"></div>
+                <input type="range" class="fp-range fp-range-min" id="fp-min"
+                  min="0" max="20000" step="100"
+                  value="${Math.min(S.filterPriceMin, 20000)}"
+                  oninput="fpUpdate()">
+                <input type="range" class="fp-range fp-range-max" id="fp-max"
+                  min="0" max="20000" step="100"
+                  value="${S.filterPriceMax >= 99999 ? 20000 : Math.min(S.filterPriceMax, 20000)}"
+                  oninput="fpUpdate()">
               </div>
             </div>
             <button class="btn btn-secondary btn-sm" style="width:100%;margin-top:8px" onclick="S.filterCat='all';S.filterBrand='';S.filterSearch='';S.filterPriceMin=0;S.filterPriceMax=99999;document.getElementById('search-input').value=''; reRenderGrid()">Réinitialiser</button>
@@ -678,6 +681,27 @@ async function renderMarketplace() {
     window.setFilter = (key, val) => {
       if (key === 'cat') S.filterCat = val;
     };
+
+    window.fpUpdate = () => {
+      const minEl = document.getElementById('fp-min');
+      const maxEl = document.getElementById('fp-max');
+      const fill  = document.getElementById('fp-fill');
+      const lbl   = document.getElementById('fp-label');
+      if (!minEl || !maxEl) return;
+      let vMin = parseInt(minEl.value);
+      let vMax = parseInt(maxEl.value);
+      if (vMin > vMax - 100) { vMin = vMax - 100; minEl.value = vMin; }
+      S.filterPriceMin = vMin;
+      S.filterPriceMax = vMax >= 20000 ? 99999 : vMax;
+      const pMin = (vMin / 20000) * 100;
+      const pMax = (vMax / 20000) * 100;
+      if (fill) { fill.style.left = pMin + '%'; fill.style.width = (pMax - pMin) + '%'; }
+      if (lbl) lbl.textContent = (vMin > 0 ? vMin.toLocaleString('fr-FR') + '\u202f€' : '0') + ' — ' + (vMax >= 20000 ? '∞' : vMax.toLocaleString('fr-FR') + '\u202f€');
+      reRenderGrid();
+    };
+
+    // Init fill position
+    setTimeout(() => fpUpdate(), 0);
     window.reRenderGrid = () => {
       const fp = filteredProducts();
       document.getElementById('product-count').textContent = `${fp.length} produit${fp.length > 1 ? 's' : ''} trouvé${fp.length > 1 ? 's' : ''}`;

@@ -42,7 +42,6 @@ public class Product {
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
     
-    // Constructeurs
     public Product() {}
     
     public Product(User seller, String name, String category, BigDecimal priceMin, BigDecimal priceMax) {
@@ -53,7 +52,6 @@ public class Product {
         this.priceMax = priceMax;
     }
     
-    // Getters et Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     

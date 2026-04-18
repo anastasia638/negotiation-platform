@@ -25,41 +25,36 @@ public class NegotiationController {
         this.negotiationEngine = negotiationEngine;
     }
 
-    // Démarrer une négociation
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public NegotiationDTO start(@Valid @RequestBody NegotiationDTO dto) {
         return negotiationService.start(dto);
     }
 
-    // Détail d'une négociation + historique des offres
     @GetMapping("/{id}")
     public NegotiationDTO getById(@PathVariable Long id) {
         return negotiationService.findById(id);
     }
 
-    // Historique des négociations d'un acheteur (paginé)
     @GetMapping("/buyer/{buyerId}")
     public Page<NegotiationDTO> getByBuyer(@PathVariable Long buyerId,
             @PageableDefault(size = 20, sort = "startedAt") Pageable pageable) {
         return negotiationService.findByBuyer(buyerId, pageable);
     }
 
-    // Historique des négociations d'un vendeur (paginé)
     @GetMapping("/seller/{sellerId}")
     public Page<NegotiationDTO> getBySeller(@PathVariable Long sellerId,
             @PageableDefault(size = 20, sort = "startedAt") Pageable pageable) {
         return negotiationService.findBySeller(sellerId, pageable);
     }
 
-    // Annuler une négociation
     @PatchMapping("/{id}/cancel")
     public NegotiationDTO cancel(@PathVariable Long id) {
         return negotiationService.cancel(id);
     }
 
-    // Réponse automatique par un agent avec une stratégie
-    // POST /api/negotiations/{id}/auto-respond?responderId=2&strategy=GREEDY&maxRounds=10
+    // Déclenche un round automatique côté vendeur (ou acheteur) selon la stratégie choisie.
+    // Le frontend appelle cet endpoint après chaque offre manuelle pour obtenir la réponse agent.
     @PostMapping("/{id}/auto-respond")
     public NegotiationDTO autoRespond(@PathVariable Long id,
                                       @RequestParam Long responderId,

@@ -29,9 +29,6 @@ public class User {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt = LocalDateTime.now();
     
-    //  SUPPRESSION de @OneToMany agents (on créera Agent plus tard)
-    
-    // Constructeurs
     public User() {}
     
     public User(String name, String email, UserType userType) {
@@ -40,7 +37,6 @@ public class User {
         this.userType = userType;
     }
     
-    // Getters et Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     

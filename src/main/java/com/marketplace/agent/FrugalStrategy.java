@@ -4,11 +4,10 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 
 /**
- * Stratégie FRUGAL — utilisée par les VENDEURS coopératifs (Sophie, Meriem).
- *
- * Comportement : accepte rapidement des prix bas, contre-propose depuis le minimum
- * et monte lentement (+3% de la plage par round).
- * Objectif : vendre vite plutôt que maximiser le prix.
+ * Vendeur coopératif qui préfère conclure une vente rapidement.
+ * Sa contre-offre part du prix minimum et monte doucement (+3% par round).
+ * Il n'est pas là pour maximiser — dès que l'acheteur atteint sa cible,
+ * il accepte sans hésiter.
  */
 public class FrugalStrategy implements NegotiationStrategy {
 
@@ -30,7 +29,7 @@ public class FrugalStrategy implements NegotiationStrategy {
             return utility >= 0.3 ? StrategyDecision.accept() : StrategyDecision.reject();
         }
 
-        // Seuil d'acceptation : n'accepte que si l'offre est < 20% + 3% par round au-dessus du min
+        // Fenêtre d'acceptation : 20% + 3% par round au-dessus du plancher
         double acceptanceThreshold = 0.20 + (round - 1) * CONCESSION_RATE;
         BigDecimal threshold = minPrice.add(
                 range.multiply(BigDecimal.valueOf(acceptanceThreshold))
@@ -40,14 +39,14 @@ public class FrugalStrategy implements NegotiationStrategy {
             return StrategyDecision.accept();
         }
 
-        // Contre-offre : monte de 3% de la plage par round depuis le minimum
+        // Monte progressivement depuis le plancher ; plafond à 60% pour rester compétitif
         double counterRatio = round * CONCESSION_RATE;
-        counterRatio = Math.min(counterRatio, 0.6); // plafond à 60% de la plage
+        counterRatio = Math.min(counterRatio, 0.6);
         BigDecimal counterPrice = minPrice.add(
                 range.multiply(BigDecimal.valueOf(counterRatio))
         ).setScale(2, RoundingMode.HALF_UP);
 
-        // Vendeur frugal : si l'acheteur propose plus que ma contre-offre, j'accepte
+        // L'acheteur a dépassé ma cible — inutile d'insister, j'accepte
         if (offeredPrice.compareTo(counterPrice) >= 0) {
             return StrategyDecision.accept();
         }

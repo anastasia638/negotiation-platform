@@ -18,13 +18,11 @@ public class OfferController {
         this.offerService = offerService;
     }
 
-    // Historique de toutes les offres d'une négociation
     @GetMapping
     public List<OfferDTO> getAll(@PathVariable Long negotiationId) {
         return offerService.findByNegotiation(negotiationId);
     }
 
-    // Proposer ou contre-proposer
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public OfferDTO propose(@PathVariable Long negotiationId,
@@ -32,14 +30,14 @@ public class OfferController {
         return offerService.propose(negotiationId, dto);
     }
 
-    // Accepter une offre → négociation AGREED
+    // Clôture la négociation côté acheteur quand il juge l'offre vendeur acceptable
     @PatchMapping("/{offerId}/accept")
     public OfferDTO accept(@PathVariable Long negotiationId,
                            @PathVariable Long offerId) {
         return offerService.accept(negotiationId, offerId);
     }
 
-    // Rejeter définitivement une offre → négociation FAILED
+    // Abandon définitif — passe la négociation en FAILED
     @PatchMapping("/{offerId}/reject")
     public OfferDTO reject(@PathVariable Long negotiationId,
                            @PathVariable Long offerId) {

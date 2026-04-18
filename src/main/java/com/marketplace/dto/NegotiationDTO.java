@@ -17,7 +17,6 @@ public class NegotiationDTO {
     private LocalDateTime endedAt;
     private List<OfferDTO> offers;
 
-    // Lecture
     private Long buyerId;
     private String buyerName;
     private Long sellerId;
@@ -25,7 +24,7 @@ public class NegotiationDTO {
     private Long productId;
     private String productName;
 
-    // Création (entrée)
+    // Champs requis uniquement à la création (POST)
     @NotNull(message = "L'identifiant du produit est obligatoire")
     private Long productIdRequest;
 

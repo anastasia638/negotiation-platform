@@ -4,11 +4,10 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 
 /**
- * Stratégie COOL-HEADED — utilisée par acheteurs ou vendeurs équilibrés.
- *
- * Comportement : converge rapidement vers le milieu de la plage (10% par round).
- * Accepte dès que l'offre est raisonnablement proche de la valeur médiane.
- * Préfère conclure rapidement plutôt que maximiser le gain.
+ * Stratégie d'équilibre : ni trop agressive, ni trop conciliante.
+ * L'agent converge vers la valeur médiane de la plage (±10% par round)
+ * et accepte dès que l'offre entre dans la zone centrale à 8%.
+ * C'est la stratégie qui produit le plus souvent un accord rapide.
  */
 public class CoolHeadedStrategy implements NegotiationStrategy {
 
@@ -24,7 +23,7 @@ public class CoolHeadedStrategy implements NegotiationStrategy {
         BigDecimal range = maxPrice.subtract(minPrice);
         BigDecimal midPrice = minPrice.add(range.divide(BigDecimal.valueOf(2), 2, RoundingMode.HALF_UP));
 
-        // Accepte si l'offre est dans les 8% autour du milieu
+        // Zone d'accord : ±8% autour du milieu de la plage
         BigDecimal lowerBound = midPrice.subtract(range.multiply(BigDecimal.valueOf(0.08))).setScale(2, RoundingMode.HALF_UP);
         BigDecimal upperBound = midPrice.add(range.multiply(BigDecimal.valueOf(0.08))).setScale(2, RoundingMode.HALF_UP);
 
@@ -32,7 +31,7 @@ public class CoolHeadedStrategy implements NegotiationStrategy {
             return StrategyDecision.accept();
         }
 
-        // Deadline : accepte si l'offre est dans la moitié centrale
+        // Dernier round : on élargit la tolérance pour éviter un échec inutile
         if (round >= maxRounds) {
             if (offeredPrice.compareTo(lowerBound.subtract(range.multiply(BigDecimal.valueOf(0.1)))) >= 0) {
                 return StrategyDecision.accept();
@@ -40,22 +39,22 @@ public class CoolHeadedStrategy implements NegotiationStrategy {
             return StrategyDecision.reject();
         }
 
-        // Contre-offre : converge vers le milieu de 10% par round
+        // Réduction progressive de la distance au milieu (10% par round)
         double distanceRatio = 0.5 - (round * CONCESSION_RATE / 2);
         distanceRatio = Math.max(distanceRatio, 0.05);
 
         BigDecimal counterPrice;
         if (offeredPrice.compareTo(midPrice) < 0) {
-            // L'offre est trop basse — on répond au-dessus du milieu
+            // Offre basse : on répond légèrement au-dessus du milieu
             counterPrice = midPrice.add(range.multiply(BigDecimal.valueOf(distanceRatio)))
                     .setScale(2, RoundingMode.HALF_UP);
         } else {
-            // L'offre est au-dessus du milieu — on répond en-dessous du milieu
+            // Offre haute : on répond légèrement en-dessous du milieu
             counterPrice = midPrice.subtract(range.multiply(BigDecimal.valueOf(distanceRatio)))
                     .setScale(2, RoundingMode.HALF_UP);
         }
 
-        // Si la contre-offre est <= au prix proposé, accepter directement
+        // La convergence a rattrapé l'offre — autant accepter
         if (counterPrice.compareTo(offeredPrice) <= 0) {
             return StrategyDecision.accept();
         }
