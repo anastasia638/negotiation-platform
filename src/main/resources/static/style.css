@@ -40,7 +40,16 @@ input, select, button, textarea { font-family: inherit; }
 /* ==================== BASE ==================== */
 body {
   font-family: var(--font-sans);
-  background: var(--bg);
+  /* Same cinematic gradient on every page */
+  background:
+    linear-gradient(155deg,
+      #010000 0%,
+      #060000 18%,
+      #0e0000 38%,
+      #190000 60%,
+      #060000 100%
+    );
+  background-attachment: fixed;
   color: var(--white);
   font-size: 15px;
   font-weight: 300;
@@ -231,11 +240,13 @@ body::after {
 
 .dropdown-menu a {
   display: block;
-  padding: 11px 22px;
-  font-family: var(--font-display);
-  font-style: italic;
-  font-size: 13px;
-  letter-spacing: 0.05em;
+  padding: 10px 22px;
+  font-family: 'DM Sans', 'Raleway', Arial, sans-serif;
+  font-style: normal;
+  font-weight: 300;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
   color: var(--grey);
   transition: color 0.2s, padding-left 0.2s;
   cursor: pointer;
@@ -712,14 +723,14 @@ main#app { padding-top: 72px; }
 .page-header { margin-bottom: 52px; }
 
 .page-header h1 {
-  font-family: var(--font-display);
+  font-family: 'Cormorant Garamond', Georgia, serif;
   font-style: italic;
   font-weight: 300;
-  font-size: 50px;
-  color: var(--white);
-  margin-bottom: 12px;
-  letter-spacing: 0.02em;
-  line-height: 1.05;
+  font-size: clamp(52px, 6.5vw, 96px);
+  color: #f0e8e0;
+  margin-bottom: 14px;
+  letter-spacing: 0.01em;
+  line-height: 0.94;
 }
 
 .page-header p {
@@ -1523,7 +1534,14 @@ tr:hover td { background: rgba(255,255,255,0.018); }
 .protocol-card:hover::after { transform: scaleX(1); }
 .protocol-card:hover { background: var(--surface2); }
 
-.protocol-icon { font-size: 26px; margin-bottom: 20px; display: block; }
+.protocol-icon {
+  font-size: 22px;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  color: var(--gold);
+  margin-bottom: 18px;
+  display: block;
+  letter-spacing: 0.04em;
+}
 
 .protocol-name {
   font-family: var(--font-display);
@@ -2047,12 +2065,12 @@ body.cur-click #cursor-ring {
   inset: 0;
   background:
     linear-gradient(to bottom,
-      rgba(3,3,3,0.3) 0%,
-      rgba(3,3,3,0.05) 40%,
-      rgba(3,3,3,0.7) 85%,
-      var(--bg) 100%
+      rgba(2,0,0,0.28) 0%,
+      rgba(3,3,3,0.04) 40%,
+      rgba(1,0,0,0.72) 85%,
+      rgba(1,0,0,0.98) 100%
     ),
-    linear-gradient(135deg, rgba(196,18,48,0.08) 0%, transparent 60%);
+    linear-gradient(135deg, rgba(196,18,48,0.07) 0%, transparent 60%);
 }
 
 .cfg-hero-content {

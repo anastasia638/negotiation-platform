@@ -16,7 +16,7 @@ const AGENT_PROFILES = [
 
 const CATEGORY_EMOJI = {
   bags: '👜', watches: '⌚', clothing: '👗',
-  perfumes: '🌹', shoes: '👠', default: '💎'
+  perfumes: '🌹', shoes: '👠', default: '◆'
 };
 
 //— PRODUCT IMAGES —
@@ -495,25 +495,25 @@ async function renderAccueil() {
           <h2>Choisissez votre marché</h2>
           <div class="protocol-cards">
             <div class="protocol-card fade-up stagger-1" onclick="navigate('marche-decentralise')">
-              <span class="protocol-icon">🔀</span>
+              <span class="protocol-icon">⇌</span>
               <div class="protocol-name">Marché Décentralisé</div>
               <div class="protocol-desc">1 Acheteur négocie avec plusieurs vendeurs simultanément via Alternating-Offer.</div>
               <div class="protocol-cta">→ Accéder</div>
             </div>
             <div class="protocol-card fade-up stagger-2" onclick="navigate('marche-centralise')">
-              <span class="protocol-icon">🏛</span>
+              <span class="protocol-icon">◈</span>
               <div class="protocol-name">Marché Centralisé</div>
               <div class="protocol-desc">Enchère double multi-rounds avec matching optimal acheteurs/vendeurs.</div>
               <div class="protocol-cta">→ Accéder</div>
             </div>
             <div class="protocol-card fade-up stagger-3" onclick="navigate('achat-groupe')">
-              <span class="protocol-icon">👥</span>
+              <span class="protocol-icon">⊕</span>
               <div class="protocol-name">Achat Groupé</div>
               <div class="protocol-desc">Coalition d'acheteurs pour négocier un prix collectif avantageux.</div>
               <div class="protocol-cta">→ Accéder</div>
             </div>
             <div class="protocol-card fade-up stagger-4" onclick="navigate('marketplace')">
-              <span class="protocol-icon">💎</span>
+              <span class="protocol-icon">◆</span>
               <div class="protocol-name">Négociation 1v1</div>
               <div class="protocol-desc">Sélectionnez un article et négociez directement avec le vendeur.</div>
               <div class="protocol-cta">→ Accéder</div>
@@ -646,7 +646,7 @@ async function renderMarketplace() {
     }
 
     function productGrid(list) {
-      if (!list.length) return '<div class="empty-state"><div class="empty-icon">🔍</div><p>Aucun produit trouvé</p></div>';
+      if (!list.length) return '<div class="empty-state"><div class="empty-icon">◎</div><p>Aucun produit trouvé</p></div>';
       return `<div class="grid grid-3">${list.map((p, i) => {
         const imgSrc = getProductImage(p);
         const cond   = conditionBadge(p.id);
@@ -702,7 +702,7 @@ async function renderMarketplace() {
     app.innerHTML = `
       <div class="page">
         <div class="page-header">
-          <h1>🛍 Luxury Marketplace</h1>
+          <h1>Luxury Marketplace</h1>
           <p>Trouvez l'article de luxe de vos rêves</p>
         </div>
 
@@ -793,7 +793,7 @@ async function renderMarcheDecentralise(params = {}) {
   const app = document.getElementById('app');
 
   if (!S.activeAgent) {
-    app.innerHTML = `<div class="page"><div class="empty-state"><div class="empty-icon">👤</div><p>Veuillez d'abord sélectionner un agent acheteur depuis <a onclick="navigate('accueil')" style="color:var(--gold);cursor:pointer">l'Accueil</a>.</p></div></div>`;
+    app.innerHTML = `<div class="page"><div class="empty-state"><div class="empty-icon">◎</div><p>Veuillez d'abord sélectionner un agent acheteur depuis <a onclick="navigate('accueil')" style="color:var(--gold);cursor:pointer">l'Accueil</a>.</p></div></div>`;
     return;
   }
 
@@ -819,7 +819,7 @@ async function renderMarcheDecentralise(params = {}) {
       app.innerHTML = `
         <div class="cfg-wrap">
           <div class="cfg-hero">
-            <div class="cfg-hero-bg" style="background-image:url('${HERO_IMAGES[2]}')"></div>
+            <div class="cfg-hero-bg" style="background-image:url('${HERO_IMAGES[1]}')"></div>
             <div class="cfg-hero-veil"></div>
             <div class="cfg-hero-content">
               <div class="cfg-eyebrow">◆ &nbsp; Marché Décentralisé &nbsp; ◆</div>
@@ -875,7 +875,7 @@ async function renderMarcheDecentralise(params = {}) {
                 <span class="cfg-cta-arrow">→</span>
               </button>
               <div id="cfg-comparateur-btn" style="display:none;margin-top:12px">
-                <button class="btn btn-secondary" style="width:100%" onclick="window._launchComparateur && window._launchComparateur()">⚖ Comparer les stratégies →</button>
+                <button class="btn btn-secondary" style="width:100%" onclick="window._launchComparateur && window._launchComparateur()">≡ Comparer les stratégies →</button>
               </div>
             </div>
           </div>
@@ -1131,7 +1131,7 @@ async function renderMarcheDecentralise(params = {}) {
               <div id="badge-${n.negId}">${statusBadge(n.status)}</div>
             </div>
             <div class="chat-messages" id="chat-${n.negId}">
-              <div class="chat-sys-msg">💎 Négociation ouverte · Stratégie vendeur : <strong>${STRAT_LABELS[n.sellerStrategy] || n.sellerStrategy}</strong></div>
+              <div class="chat-sys-msg">◆ Négociation ouverte · Stratégie vendeur : <strong>${STRAT_LABELS[n.sellerStrategy] || n.sellerStrategy}</strong></div>
               <div class="chat-msg chat-seller-msg">
                 <div class="chat-bubble chat-bubble-seller">
                   <span class="chat-text">Bonjour ! Je vous propose <strong>${n.productName}</strong> (${fmt(n.priceMin)} – ${fmt(n.priceMax)}). En attente de votre offre... 👀</span>
@@ -1145,7 +1145,7 @@ async function renderMarcheDecentralise(params = {}) {
         app.innerHTML = `
           <div class="page" id="nego-page">
             <div class="page-header">
-              <h1>🔀 Marché Décentralisé</h1>
+              <h1>Marché Décentralisé</h1>
               <p>Comparaison de <strong>${vendors.length} ${catLabel[S.negoProduct?.category] || S.negoProduct?.category || 'articles'}</strong> — <em>${S.activeAgent.name}</em> (${S.activeAgent.strategy})</p>
               <p style="font-size:12px;color:var(--grey);margin-top:4px">Tu proposes un budget : chaque vendeur répond avec son propre article · le meilleur deal gagne</p>
             </div>
@@ -1198,7 +1198,7 @@ async function renderMarcheDecentralise(params = {}) {
           msgEl.id = mid;
 
           if (o.side === 'buyer') {
-            const buyerEmojis = ['💰','🤝','✨','💼','🎯','💡'];
+            const buyerEmojis = ['◆','◈','◇','○','◎','△'];
             const emoji = buyerEmojis[Math.floor(idx / 2) % buyerEmojis.length];
             msgEl.className = 'chat-msg chat-buyer-msg';
             msgEl.innerHTML = `
@@ -1526,7 +1526,7 @@ async function renderMarcheCentralise() {
               <div class="cfg-field">
                 <label class="cfg-label">Catégorie de produits</label>
                 <select class="cfg-select" id="cc-cat">
-                  ${cats.map(c => `<option value="${c}">${CAT_EMOJI[c]||'💎'} ${c.charAt(0).toUpperCase()+c.slice(1)}</option>`).join('')}
+                  ${cats.map(c => `<option value="${c}">${c.charAt(0).toUpperCase()+c.slice(1)}</option>`).join('')}
                 </select>
               </div>
               <div class="cfg-field">
@@ -1823,7 +1823,7 @@ async function renderAchatGroupe() {
 
     const buyers = users.filter(u => u.userType === 'BUYER');
     const cats   = [...new Set(products.map(p => p.category).filter(Boolean))];
-    const CAT_EMOJI   = { bags:'👜', watches:'⌚', clothing:'👗', perfumes:'🌹', shoes:'👠' };
+    const CAT_EMOJI   = { bags:'◆', watches:'◈', clothing:'·', perfumes:'·', shoes:'·' };
     const STRAT_COLORS = { COOL_HEADED:'var(--crimson)', GREEDY:'#E8203E', FRUGAL:'var(--grey)' };
 
     // State — quantité = nombre de membres sélectionnés
@@ -1864,7 +1864,7 @@ async function renderAchatGroupe() {
       app.innerHTML = `
         <div class="cfg-wrap">
           <div class="cfg-hero">
-            <div class="cfg-hero-bg" style="background-image:url('${HERO_IMAGES[3]}')"></div>
+            <div class="cfg-hero-bg" style="background-image:url('${HERO_IMAGES[0]}')"></div>
             <div class="cfg-hero-veil"></div>
             <div class="cfg-hero-content">
               <div class="cfg-eyebrow">◆ &nbsp; Achat Groupé &nbsp; ◆</div>
@@ -1875,7 +1875,7 @@ async function renderAchatGroupe() {
             <div class="cfg-deco cfg-d2">◇</div>
             <div class="cfg-deco cfg-d3">◆</div>
           </div>
-          <div class="cfg-body" style="display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:860px">
+          <div class="cfg-body" style="display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:920px;margin:0 auto;width:100%">
 
             <!-- Colonne gauche : produit -->
             <div class="cfg-card" style="margin:0">
@@ -1967,7 +1967,7 @@ async function renderAchatGroupe() {
 
       app.innerHTML = `<div class="page" id="ag-nego-page">
         <div class="page-header">
-          <h1>👥 Achat Groupé en cours</h1>
+          <h1>Achat Groupé</h1>
           <p>${groupProduct.name} · ${memberList.length} acheteurs · ${qty} unités · −${disc}%</p>
         </div>
         <div id="ag-members-strip" style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap">
@@ -1993,7 +1993,7 @@ async function renderAchatGroupe() {
               <div id="ag-nego-badge"></div>
             </div>
             <div class="chat-messages" id="ag-chat-msgs">
-              <div class="chat-sys-msg">👥 Achat groupé · ${memberList.length} acheteurs · ${qty} unités · Remise −${disc}%</div>
+              <div class="chat-sys-msg">◈ Achat groupé · ${memberList.length} acheteurs · ${qty} unités · Remise −${disc}%</div>
             </div>
           </div>
         </div>
@@ -2166,7 +2166,7 @@ async function renderAchatGroupe() {
       async function agRunRound(buyerPrice) {
         if (agState.status !== 'NEGOTIATING') return;
         agState.round++;
-        const buyerEmojis = ['💰','🤝','✨','💼','🎯','💡'];
+        const buyerEmojis = ['◆','◈','◇','○','◎','△'];
         appendMsg(`<div class="chat-msg chat-buyer-msg">
           <div class="chat-bubble chat-bubble-buyer">
             <span class="chat-text">${buyerEmojis[agState.round%6]} Le groupe propose <strong>${fmt(buyerPrice)}</strong> / unité × ${qty} = <strong>${fmt(buyerPrice*qty)}</strong></span>
@@ -2297,7 +2297,7 @@ async function renderNegociation1v1(params = {}) {
   const app = document.getElementById('app');
 
   if (!S.activeAgent) {
-    app.innerHTML = `<div class="page"><div class="empty-state"><div class="empty-icon">👤</div><p>Sélectionnez un agent depuis <a onclick="navigate('accueil')" style="color:var(--gold);cursor:pointer">l'Accueil</a>.</p></div></div>`;
+    app.innerHTML = `<div class="page"><div class="empty-state"><div class="empty-icon">◎</div><p>Sélectionnez un agent depuis <a onclick="navigate('accueil')" style="color:var(--gold);cursor:pointer">l'Accueil</a>.</p></div></div>`;
     return;
   }
 
@@ -2363,7 +2363,7 @@ async function renderNegociation1v1(params = {}) {
                 </div>
               </div>
               <div class="cfg-info-box">
-                <span class="cfg-info-icon">🎯</span>
+                <span class="cfg-info-icon">◆</span>
                 <span>Négociation directe avec <strong>un seul vendeur</strong>. Vous pouvez accepter ou refuser l'offre du vendeur à tout moment.</span>
               </div>
               <button class="cfg-cta" onclick="startN1Nego()">
@@ -2415,7 +2415,7 @@ async function renderNegociation1v1(params = {}) {
             const nm = (n1Product.sellerName||'').toLowerCase();
             if (nm.includes('trystan')||nm.includes('august')) return 'Agressif 😤';
             if (nm.includes('sophie')||nm.includes('meriem')) return 'Conservateur 🧘';
-            return 'Adaptatif 🎯';
+            return 'Adaptatif';
           })();
           sellerInfo.innerHTML = `<strong>${n1Product.sellerName}</strong> · Stratégie vendeur : <span style="color:var(--gold)">${strat}</span>`;
         }
@@ -2458,7 +2458,7 @@ async function renderNegociation1v1(params = {}) {
 
       app.innerHTML = `<div class="page" id="n1-nego-page">
         <div class="page-header">
-          <h1>🎯 Négociation 1v1</h1>
+          <h1>Négociation 1v1</h1>
           <p>${n1Product.name} — <em>${S.activeAgent.name}</em> vs <em>${n1Product.sellerName||'Vendeur'}</em></p>
         </div>
         <div class="round-progress">
@@ -2639,7 +2639,7 @@ async function renderNegociation1v1(params = {}) {
               <div class="btn-row" style="margin-top:20px;justify-content:center">
                 <button class="btn btn-primary" onclick="navigate('historique')">Voir dans l'historique</button>
                 <button class="btn btn-secondary" onclick="navigate('negociation-1v1')">Nouvelle négociation</button>
-                <button class="btn btn-secondary" onclick="navigate('comparateur',{productId:${n1Product.id}})">⚖ Comparer stratégies</button>
+                <button class="btn btn-secondary" onclick="navigate('comparateur',{productId:${n1Product.id}})">≡ Comparer stratégies</button>
               </div>
             </div>`
           : `<div class="result-card failed" style="margin-top:24px">
@@ -2664,7 +2664,7 @@ async function renderNegociation1v1(params = {}) {
         if (n1State.status !== 'NEGOTIATING') return;
         n1State.round++;
         updateProgress();
-        const buyerEmojis = ['💰','🤝','✨','💼','🎯','💡'];
+        const buyerEmojis = ['◆','◈','◇','○','◎','△'];
         appendMsg(`<div class="chat-msg chat-buyer-msg">
           <div class="chat-bubble chat-bubble-buyer">
             <span class="chat-text">${buyerEmojis[n1State.round%6]} Je propose <strong>${fmt(buyerOffer)}</strong></span>
@@ -2768,7 +2768,7 @@ async function renderNegociation1v1(params = {}) {
       const nego = await apiStartNego(buyerId, n1Product.id);
       n1State.negoId = nego.id;
 
-      appendMsg(`<div class="chat-sys-msg">🎯 Négociation ouverte · Stratégie vendeur : <strong>${sellerStrat==='GREEDY'?'Agressif':sellerStrat==='FRUGAL'?'Conservateur':'Adaptatif'}</strong></div>`);
+      appendMsg(`<div class="chat-sys-msg">◆ Négociation ouverte · Stratégie vendeur : <strong>${sellerStrat==='GREEDY'?'Agressif':sellerStrat==='FRUGAL'?'Conservateur':'Adaptatif'}</strong></div>`);
       appendMsg(`<div class="chat-msg chat-seller-msg">
         <div class="chat-bubble chat-bubble-seller">
           <span class="chat-text">Bonjour ! Je suis prêt à négocier. Quelle est votre offre ? 👀</span>
@@ -2788,7 +2788,7 @@ async function renderHistorique() {
   const app = document.getElementById('app');
 
   if (!S.activeAgent) {
-    app.innerHTML = `<div class="page"><div class="empty-state"><div class="empty-icon">👤</div><p>Sélectionnez un agent depuis <a onclick="navigate('accueil')" style="color:var(--gold);cursor:pointer">l'Accueil</a> pour voir l'historique.</p></div></div>`;
+    app.innerHTML = `<div class="page"><div class="empty-state"><div class="empty-icon">◎</div><p>Sélectionnez un agent depuis <a onclick="navigate('accueil')" style="color:var(--gold);cursor:pointer">l'Accueil</a> pour voir l'historique.</p></div></div>`;
     return;
   }
 
@@ -2840,7 +2840,7 @@ async function renderHistorique() {
       <div class="page">
         <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px">
           <div>
-            <h1>📋 Historique des Négociations</h1>
+            <h1>Historique des Négociations</h1>
             <p>Agent : ${S.activeAgent.name}</p>
           </div>
           <button class="btn btn-secondary btn-sm" onclick="exportHistoriqueCSV(window._histNegos, window._histCentralise)" style="margin-top:8px">⬇ Exporter CSV</button>
@@ -2949,7 +2949,7 @@ async function renderProfilAgent() {
       <div class="page">
         <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px">
           <div>
-            <h1>👤 Profil des Agents Acheteurs</h1>
+            <h1>Profil des Agents</h1>
             <p>Consultez les soldes, pénalités et stratégies de chaque agent</p>
           </div>
           <button class="btn btn-primary" onclick="toggleAddAgentForm()">+ Ajouter un agent</button>
@@ -3876,7 +3876,7 @@ async function renderDashboard() {
   app.innerHTML = `
     <div class="page">
       <div class="page-header">
-        <h1>📊 Tableau de Bord Analytique</h1>
+        <h1>Tableau de Bord</h1>
         <p>Vue d'ensemble des négociations et performances</p>
       </div>
 
