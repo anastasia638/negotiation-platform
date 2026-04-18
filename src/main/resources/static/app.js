@@ -1532,7 +1532,7 @@ async function renderMarcheCentralise() {
       const resultEl  = document.getElementById('centralise-result');
       const refProd   = catProds[0];
 
-      // FIX Bug 3 : pas de conflit display — on met juste display:none, flex sera mis par JS
+      // L'indicateur de round est initialement masqué ; JS l'active après construction du DOM
       resultEl.innerHTML = `
         <div style="margin-top:28px">
           <div class="process-steps" id="steps">
@@ -1557,7 +1557,7 @@ async function renderMarcheCentralise() {
       document.getElementById('step1').classList.add('done');
       document.getElementById('step2').classList.add('active');
 
-      // FIX Bug 2 : bids démarrent à 72-84 % de priceMax → chevauchement garanti en quelques rounds
+      // Les bids démarrent à 72-84 % de priceMax pour garantir la convergence en quelques rounds
       let currentBids = selectedBuyers.map((u, i) => {
         const p    = AGENT_PROFILES[i] || AGENT_PROFILES[0];
         const base = refProd.priceMax * (0.72 + i * 0.03 + Math.random() * 0.04);
@@ -1569,7 +1569,7 @@ async function renderMarcheCentralise() {
       document.getElementById('step2').classList.add('done');
       document.getElementById('step3').classList.add('active');
 
-      // FIX Bug 2 : asks démarrent à 108-115 % de priceMin → distance raisonnable avec les bids
+      // Les asks démarrent à 108-115 % de priceMin pour laisser une marge de convergence réaliste
       let currentAsks = selectedSellers.map((p, i) => {
         const base = p.priceMin * (1.10 - i * 0.02 + Math.random() * 0.04);
         return { seller: p.sellerName || ('Vendeur'+(i+1)), sellerShort: 'Vendeur'+(i+1), product: p.name, ask: Math.round(base), floor: p.priceMin, matched: false };
@@ -1578,13 +1578,12 @@ async function renderMarcheCentralise() {
       await sleep(1500);
       document.getElementById('step3').classList.add('done');
 
-      // FIX Bug 3 : affichage via style.display après construction du DOM
       document.getElementById('round-indicator').style.display = 'flex';
       document.getElementById('step-content').innerHTML = '';
 
       const transactions = [];
       const roundHistory = []; // pour le schéma de convergence
-      let   actualRound  = 0;  // FIX Bug 1 : compteur réel séparé de la variable de boucle
+      let   actualRound  = 0;  // compteur indépendant de la variable de boucle (évite off-by-one à l'affichage)
 
       function refreshRoundUI() {
         const matchedSellers = currentAsks.filter(a => a.matched).length;
@@ -1627,7 +1626,7 @@ async function renderMarcheCentralise() {
 
       // Boucle d'enchère
       for (let r = 1; r <= maxRounds; r++) {
-        actualRound = r; // FIX Bug 1
+        actualRound = r;
 
         const availBids = currentBids.filter(b => !b.matched).sort((a,b) => b.bid - a.bid);
         const availAsks = currentAsks.filter(a => !a.matched).sort((a,b) => a.ask - b.ask);

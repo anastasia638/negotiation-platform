@@ -108,8 +108,9 @@ public class NegotiationEngine {
                 negotiationRepository.save(negotiation);
             }
             case COUNTER -> {
-                // Si la contre-offre est <= au prix proposé par l'acheteur,
-                // le vendeur accepte directement (inutile de contre-proposer moins cher)
+                // Optimisation du protocole : si la stratégie produit une contre-offre
+                // inférieure ou égale à l'offre reçue, on conclut directement l'accord.
+                // Cela évite un round inutile où le vendeur proposerait moins que l'acheteur.
                 if (decision.getCounterPrice().compareTo(lastOffer.getProposedPrice()) <= 0) {
                     lastOffer.setStatus(OfferStatus.ACCEPTED);
                     offerRepository.save(lastOffer);

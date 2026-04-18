@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Pinyon+Script&amp;display=swap');
+    </style>
+
+    <!-- Inner circle: warm white -->
+    <radialGradient id="circleGrad" cx="50%" cy="38%" r="55%">
+      <stop offset="0%"   stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#f0eeec"/>
+    </radialGradient>
+
+    <!-- Letter shadow -->
+    <filter id="letterShadow">
+      <feDropShadow dx="1" dy="1.5" stdDeviation="1.5" flood-color="#8B0D22" flood-opacity="0.3"/>
+    </filter>
+
+  </defs>
+
+  <!-- White circle background only -->
+  <circle cx="100" cy="100" r="90" fill="url(#circleGrad)"/>
+  <circle cx="100" cy="100" r="90" fill="none" stroke="#d8d0c8" stroke-width="1" opacity="0.5"/>
+
+  <!-- Calligraphic M -->
+  <text
+    x="100"
+    y="128"
+    text-anchor="middle"
+    font-family="'Pinyon Script', 'Brush Script MT', 'Segoe Script', cursive"
+    font-size="115"
+    fill="#C41230"
+    filter="url(#letterShadow)"
+  >M</text>
+
+  <!-- Small cursive "c" hanging off the bottom-right of M -->
+  <text
+    x="148"
+    y="152"
+    text-anchor="middle"
+    font-family="'Pinyon Script', 'Brush Script MT', 'Segoe Script', cursive"
+    font-size="38"
+    fill="#C41230"
+    opacity="0.9"
+  >c</text>
+
+</svg>

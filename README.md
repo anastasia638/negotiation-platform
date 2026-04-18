@@ -208,6 +208,34 @@ mvn clean package -DskipTests
 java -jar target/sa7-marketplace-*.jar --spring.profiles.active=dev
 ```
 
+### Comptes de démonstration
+
+En profil `dev`, la base est peuplée automatiquement via `data.sql`. Tous les comptes utilisent le mot de passe `password` (BCrypt) — ce mot de passe est intentionnel pour faciliter les tests et l'évaluation, il ne doit pas être utilisé en production.
+
+| Rôle | Email | Mot de passe |
+|------|-------|--------------|
+| Acheteur | alice@sa7.com | `password` |
+| Acheteur | bob@sa7.com | `password` |
+| Vendeur | trystan@sa7.com | `password` |
+| Admin | admin@sa7.com | `password` |
+
+> L'interface permet de sélectionner un profil directement depuis l'accueil — la connexion JWT est gérée automatiquement.
+
+---
+
+## Notes de sécurité
+
+Ce projet est une démonstration académique. Plusieurs mesures de sécurité sont volontairement simplifiées pour faciliter le test local :
+
+| Mesure | Valeur en dev | Raison |
+|--------|---------------|--------|
+| CSRF | Désactivé | SPA sans cookies de session |
+| CORS | Désactivé | Accès local uniquement |
+| JWT secret | Valeur fixe dans `application-dev.properties` | Pas de secrets en production dans ce profil |
+| Tokens JWT | Stockés en `localStorage` | Standard SPA, acceptable hors production |
+
+En profil `prod` (Docker Compose), le secret JWT est injecté via variable d'environnement `.env` et ne figure pas dans le code.
+
 ---
 
 ## Référence API
