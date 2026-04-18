@@ -426,30 +426,39 @@ async function renderAccueil() {
         </div>`;
     }).join('');
 
-    // Build hero slides HTML
-    const slidesHtml = HERO_IMAGES.map((src, i) =>
-      `<div class="hero-slide ${i===0?'visible':''}" style="background-image:url('${src}')"></div>`
-    ).join('');
-    const dotsHtml = HERO_IMAGES.map((_, i) =>
-      `<div class="hero-dot ${i===0?'active':''}" onclick="heroGoTo(${i})"></div>`
-    ).join('');
-
     app.innerHTML = `
-      <!-- HERO CINÉMATIQUE -->
-      <section class="hero">
-        <div class="hero-bg" id="hero-bg">${slidesHtml}</div>
-        <div class="hero-overlay"></div>
-        <div class="hero-content">
-          <h1 class="hero-title">Couture<br>Marketplace</h1>
-          <p class="hero-sub">Vos envies de luxe, nos agents s'occupent du prix.</p>
-          <div class="hero-actions">
+      <!-- HERO PREMIUM -->
+      <section class="hero-premium" id="hero-premium">
+        <canvas class="hp-canvas" id="hp-canvas"></canvas>
+        <div class="hp-ambient"></div>
+
+        <div class="hp-logo" id="hp-logo">
+          <svg viewBox="0 0 540 420" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="MC Logo">
+            <path id="hp-m-main"
+              d="M 88,392 L 88,32 L 265,296 L 442,32 L 442,392"
+              stroke="#f0e8e0" stroke-width="14" stroke-linecap="square" stroke-linejoin="miter" fill="none"/>
+            <path class="hp-serif" d="M 58,32 L 118,32"   stroke="#f0e8e0" stroke-width="9" stroke-linecap="butt" fill="none"/>
+            <path class="hp-serif" d="M 412,32 L 472,32"  stroke="#f0e8e0" stroke-width="9" stroke-linecap="butt" fill="none"/>
+            <path class="hp-serif" d="M 58,392 L 118,392" stroke="#f0e8e0" stroke-width="9" stroke-linecap="butt" fill="none"/>
+            <path class="hp-serif" d="M 412,392 L 472,392" stroke="#f0e8e0" stroke-width="9" stroke-linecap="butt" fill="none"/>
+            <path id="hp-c-path"
+              d="M 446,116 C 516,80 574,168 558,264 C 542,360 468,420 378,402 C 288,384 250,308 270,252 L 262,216"
+              stroke="#f0e8e0" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          </svg>
+        </div>
+
+        <div class="hp-content" id="hp-content">
+          <div class="hp-eyebrow">SA7 · Couture Marketplace</div>
+          <h1 class="hp-title">Couture<br>Marketplace</h1>
+          <p class="hp-sub">Vos envies de luxe, nos agents s'occupent du prix.</p>
+          <div class="hp-actions" id="hp-actions">
             <button class="btn btn-primary btn-lg" onclick="document.getElementById('agents-section').scrollIntoView({behavior:'smooth'})">Choisir un agent</button>
             <button class="btn btn-outline btn-lg" onclick="navigate('marketplace')">Explorer</button>
           </div>
         </div>
-        <div class="hero-dots" id="hero-dots">${dotsHtml}</div>
-        <div class="hero-scroll">
-          <div class="hero-scroll-line"></div>
+
+        <div class="hp-scroll">
+          <div class="hp-scroll-line"></div>
         </div>
       </section>
 
@@ -502,22 +511,8 @@ async function renderAccueil() {
         </div>
       </div>`;
 
-    // Hero slideshow
-    let currentSlide = 0;
-    const slides = document.querySelectorAll('.hero-slide');
-    const dots   = document.querySelectorAll('.hero-dot');
-
-    window.heroGoTo = (n) => {
-      slides[currentSlide].classList.remove('visible');
-      dots[currentSlide].classList.remove('active');
-      currentSlide = (n + slides.length) % slides.length;
-      slides[currentSlide].classList.add('visible');
-      dots[currentSlide].classList.add('active');
-    };
-
-    const heroInterval = setInterval(() => heroGoTo(currentSlide + 1), 5000);
-    // Clear interval when navigating away
-    app._heroInterval = heroInterval;
+    // Hero premium — particles & animation sequence
+    initHeroPremium();
 
     // Scroll animations
     initScrollReveal();
@@ -527,6 +522,57 @@ async function renderAccueil() {
   } catch(e) {
     app.innerHTML = `<div class="page"><div class="empty-state"><div class="empty-icon">⚠️</div><p>Impossible de charger les agents.<br><small>${e.message}</small></p></div></div>`;
   }
+}
+
+function initHeroPremium() {
+  // Enable pointer-events on CTA once animations complete
+  setTimeout(() => {
+    const a = document.getElementById('hp-actions');
+    if (a) a.style.pointerEvents = 'auto';
+  }, 5000);
+
+  // Floating dust particles
+  const canvas = document.getElementById('hp-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+
+  const resize = () => {
+    canvas.width  = canvas.offsetWidth;
+    canvas.height = canvas.offsetHeight;
+  };
+  resize();
+  window.addEventListener('resize', resize);
+
+  const particles = Array.from({ length: 52 }, () => ({
+    x:       Math.random() * canvas.width,
+    y:       Math.random() * canvas.height,
+    r:       Math.random() * 0.9 + 0.2,
+    vx:      (Math.random() - 0.5) * 0.13,
+    vy:      -(Math.random() * 0.09 + 0.02),
+    opacity: Math.random() * 0.045 + 0.012,
+  }));
+
+  let rafId;
+  function tick() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    for (const p of particles) {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(240,232,218,${p.opacity})`;
+      ctx.fill();
+      p.x += p.vx;
+      p.y += p.vy;
+      if (p.x < 0)             p.x = canvas.width;
+      if (p.x > canvas.width)  p.x = 0;
+      if (p.y < 0)             p.y = canvas.height;
+      if (p.y > canvas.height) p.y = 0;
+    }
+    rafId = requestAnimationFrame(tick);
+  }
+  tick();
+  // Cleanup when navigating away
+  const hero = document.getElementById('hero-premium');
+  if (hero) hero._stopParticles = () => cancelAnimationFrame(rafId);
 }
 
 async function selectAgent(id, name, email, strategy, strategyKey, budget) {
