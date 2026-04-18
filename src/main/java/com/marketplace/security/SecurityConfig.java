@@ -39,7 +39,7 @@ public class SecurityConfig {
                 // Endpoints publics
                 .requestMatchers("/api/auth/**", "/api/health").permitAll()
                 // Frontend statique
-                .requestMatchers("/", "/index.html", "/*.css", "/*.js", "/favicon.ico").permitAll()
+                .requestMatchers("/", "/index.html", "/*.css", "/*.js", "/*.png", "/*.svg", "/*.ico", "/*.jpg", "/*.webp").permitAll()
                 // Swagger UI
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
                 // H2 console (dev uniquement)

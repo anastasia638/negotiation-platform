@@ -1192,6 +1192,33 @@ tr:hover td { background: rgba(255,255,255,0.018); }
   margin-bottom: 8px;
 }
 
+.price-inputs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.price-input {
+  width: 0;
+  flex: 1;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--white);
+  padding: 7px 10px;
+  font-size: 13px;
+  font-family: var(--font-sans);
+  outline: none;
+  transition: border-color .2s;
+  -moz-appearance: textfield;
+}
+.price-input::-webkit-inner-spin-button,
+.price-input::-webkit-outer-spin-button { -webkit-appearance: none; }
+.price-input:focus { border-color: var(--gold); }
+.price-input-sep {
+  color: var(--grey);
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
 .products-area h2 {
   font-size: 10.5px;
   letter-spacing: 0.16em;

@@ -638,16 +638,6 @@ async function renderMarketplace() {
 
         <div class="chip-row">${catChips}</div>
 
-        <div class="price-range-wrap">
-          <label class="price-range-label">Prix : <span id="pr-min-val">${S.filterPriceMin === 0 ? '0' : fmt(S.filterPriceMin)}</span> — <span id="pr-max-val">${S.filterPriceMax >= 99999 ? '∞' : fmt(S.filterPriceMax)}</span></label>
-          <div class="dual-slider">
-            <input type="range" id="pr-min" class="range-min" min="0" max="20000" step="100" value="${Math.min(S.filterPriceMin, 20000)}"
-              oninput="S.filterPriceMin=Math.min(parseInt(this.value),S.filterPriceMax-100);this.value=S.filterPriceMin;document.getElementById('pr-min-val').textContent=S.filterPriceMin>0?S.filterPriceMin.toLocaleString('fr-FR')+'\u202f€':'0';reRenderGrid()">
-            <input type="range" id="pr-max" class="range-max" min="0" max="20000" step="100" value="${Math.min(S.filterPriceMax >= 99999 ? 20000 : S.filterPriceMax, 20000)}"
-              oninput="S.filterPriceMax=Math.max(parseInt(this.value),S.filterPriceMin+100)||99999;document.getElementById('pr-max-val').textContent=parseInt(this.value)>=20000?'\u221e':parseInt(this.value).toLocaleString('fr-FR')+'\u202f€';if(parseInt(this.value)>=20000)S.filterPriceMax=99999;reRenderGrid()">
-          </div>
-        </div>
-
         <div class="marketplace-layout">
           <div class="filters-panel">
             <h3>Filtres</h3>
@@ -663,7 +653,19 @@ async function renderMarketplace() {
                 ${cats.map(c => `<option value="${c}" ${S.filterCat===c?'selected':''}>${c==='all'?'Toutes':c}</option>`).join('')}
               </select>
             </div>
-            <button class="btn btn-secondary btn-sm" style="width:100%" onclick="S.filterCat='all';S.filterBrand='';S.filterSearch='';document.getElementById('search-input').value=''; reRenderGrid()">Réinitialiser</button>
+            <div class="filter-group">
+              <label>Prix (€)</label>
+              <div class="price-inputs">
+                <input type="number" class="price-input" placeholder="Min" min="0"
+                  value="${S.filterPriceMin > 0 ? S.filterPriceMin : ''}"
+                  oninput="S.filterPriceMin=parseInt(this.value)||0; reRenderGrid()">
+                <span class="price-input-sep">—</span>
+                <input type="number" class="price-input" placeholder="Max" min="0"
+                  value="${S.filterPriceMax < 99999 ? S.filterPriceMax : ''}"
+                  oninput="S.filterPriceMax=parseInt(this.value)||99999; reRenderGrid()">
+              </div>
+            </div>
+            <button class="btn btn-secondary btn-sm" style="width:100%;margin-top:8px" onclick="S.filterCat='all';S.filterBrand='';S.filterSearch='';S.filterPriceMin=0;S.filterPriceMax=99999;document.getElementById('search-input').value=''; reRenderGrid()">Réinitialiser</button>
           </div>
 
           <div class="products-area">
