@@ -32,6 +32,16 @@
 <table>
   <tr>
     <td align="center" width="50%">
+      <img src="docs/screenshots/accueil.png" alt="Accueil — Couture Marketplace" width="100%"/>
+      <br/><sub><b>Accueil</b> — logo MC animé, sélection d'agent, navigation</sub>
+    </td>
+    <td align="center" width="50%">
+      <img src="docs/screenshots/marketplace.png" alt="Luxury Marketplace — catalogue produits" width="100%"/>
+      <br/><sub><b>Marketplace</b> — catalogue luxe, filtres, recherche floue, 31 articles</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="50%">
       <img src="docs/screenshots/marche-decentralise.png" alt="Marché Décentralisé — 3 vendeurs en parallèle" width="100%"/>
       <br/><sub><b>Marché Décentralisé</b> — 1 acheteur négocie simultanément avec N vendeurs</sub>
     </td>
