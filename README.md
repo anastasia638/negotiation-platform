@@ -1,6 +1,6 @@
 <div align="center">
 
-# ◆ SA7 — Couture Marketplace
+# ◆ SA7 — Negotiation Platform
 
 *Une marketplace de négociation multi-agents pour la mode de luxe*
 
@@ -24,6 +24,23 @@
 > sur quatre types de marchés distincts — le tout dans une interface de luxe animée.
 
 </div>
+
+---
+
+## Aperçu
+
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <img src="docs/screenshots/marche-decentralise.png" alt="Marché Décentralisé — 3 vendeurs en parallèle" width="100%"/>
+      <br/><sub><b>Marché Décentralisé</b> — 1 acheteur négocie simultanément avec N vendeurs</sub>
+    </td>
+    <td align="center" width="50%">
+      <img src="docs/screenshots/dashboard.png" alt="Tableau de bord analytique" width="100%"/>
+      <br/><sub><b>Dashboard analytique</b> — taux de succès par stratégie, volume, convergence</sub>
+    </td>
+  </tr>
+</table>
 
 ---
 
