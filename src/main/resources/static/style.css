@@ -535,32 +535,16 @@ body::after {
   to   { transform: translate(-50%, calc(-50% - 25vh)) scale(0.28); }
 }
 
-/* ── M stroke draw ── */
-#hp-m-main {
-  stroke-dasharray: 1750;
-  stroke-dashoffset: 1750;
-  animation: hp-draw 1.8s cubic-bezier(0.4, 0, 0.2, 1) 0.2s forwards;
+/* ── MC logo — état initial (JS anime via getTotalLength) ── */
+#mc-m-l, #mc-m-v, #mc-m-r, #mc-c {
+  /* strokeDasharray/Offset définis par JS — invisible au départ */
+  will-change: stroke-dashoffset;
 }
 
-/* ── M serifs (all 4 fire together) ── */
-.hp-serif {
-  stroke-dasharray: 80;
-  stroke-dashoffset: 80;
-  animation: hp-draw 0.4s ease-out 1.7s forwards;
+#mc-serif-t, #mc-serif-b {
+  opacity: 0; /* fadeIn géré par JS */
 }
 
-/* ── C cursive draw — pure white, glow, after M ── */
-#hp-c-path {
-  stroke-dasharray: 1500;
-  stroke-dashoffset: 1500;
-  animation: hp-draw 1.5s cubic-bezier(0.25, 0.1, 0.25, 1) 1.95s forwards;
-  filter: drop-shadow(0 0 6px rgba(255,255,255,0.40))
-          drop-shadow(0 0 18px rgba(255,255,255,0.15));
-}
-
-@keyframes hp-draw {
-  to { stroke-dashoffset: 0; }
-}
 
 /* ── Text content ── */
 .hp-content {
@@ -1218,6 +1202,54 @@ select option { background: var(--surface2); }
 }
 
 .search-bar::placeholder { color: var(--grey); }
+
+/* Search suggestions dropdown */
+.search-suggestions {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0; right: 0;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  z-index: 200;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.55);
+}
+
+.search-suggestion-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  cursor: pointer;
+  transition: background 0.15s;
+  gap: 12px;
+}
+
+.search-suggestion-item:hover {
+  background: rgba(196,18,48,0.12);
+}
+
+.ssi-label {
+  font-size: 13px;
+  color: var(--cream);
+  font-family: var(--font-sans);
+}
+
+.ssi-label mark {
+  background: none;
+  color: var(--gold);
+  font-weight: 600;
+}
+
+.ssi-sub {
+  font-size: 11px;
+  color: var(--grey);
+  font-family: var(--font-sans);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+}
 
 .search-bar:focus {
   border-color: var(--crimson);

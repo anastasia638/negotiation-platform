@@ -434,27 +434,31 @@ async function renderAccueil() {
         <div class="hp-vignette"></div>
 
         <div class="hp-logo" id="hp-logo">
-          <svg viewBox="0 0 600 480" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="MC Logo">
-            <!-- ══ M — thin hairline strokes, architectural serif ══ -->
-            <!-- Main M skeleton: left leg → inner-left diagonal → inner-right diagonal → right leg -->
-            <path id="hp-m-main"
-              d="M 78,452 L 78,28 L 264,318 L 450,28 L 450,452"
-              stroke="#ede4d8" stroke-width="12" stroke-linecap="square" stroke-linejoin="miter" fill="none"/>
-            <!-- Top serifs -->
-            <path class="hp-serif" d="M 50,28 L 106,28"  stroke="#ede4d8" stroke-width="7.5" stroke-linecap="butt" fill="none"/>
-            <path class="hp-serif" d="M 422,28 L 478,28" stroke="#ede4d8" stroke-width="7.5" stroke-linecap="butt" fill="none"/>
-            <!-- Bottom serifs -->
-            <path class="hp-serif" d="M 50,452 L 106,452"  stroke="#ede4d8" stroke-width="7.5" stroke-linecap="butt" fill="none"/>
-            <path class="hp-serif" d="M 422,452 L 478,452" stroke="#ede4d8" stroke-width="7.5" stroke-linecap="butt" fill="none"/>
+          <svg id="mc-svg" viewBox="0 0 760 500" width="100%" height="100%" style="overflow:visible" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="MC Logo">
+            <!-- ══ M ══ -->
+            <path id="mc-m-l" d="M 85,440 L 85,45"
+              stroke="#ede4d8" stroke-width="10" stroke-linecap="round" fill="none"/>
+            <path id="mc-m-v" d="M 85,45 L 262,308 L 440,45"
+              stroke="#ede4d8" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+            <path id="mc-m-r" d="M 440,45 L 440,440"
+              stroke="#ede4d8" stroke-width="10" stroke-linecap="round" fill="none"/>
+            <path id="mc-serif-t" d="M 58,45 L 112,45 M 413,45 L 467,45"
+              stroke="#ede4d8" stroke-width="7" stroke-linecap="butt" fill="none"/>
+            <path id="mc-serif-b" d="M 58,440 L 112,440 M 413,440 L 467,440"
+              stroke="#ede4d8" stroke-width="7" stroke-linecap="butt" fill="none"/>
 
-            <!-- ══ C — cursive, written top→bottom, opening to the RIGHT ══ -->
-            <!-- 2-arc bezier: starts top-right, sweeps far left, returns bottom-right + tail -->
-            <path id="hp-c-path"
-              d="M 468,96
-                 C 468,28 192,24 170,230
-                 C 148,436 308,504 468,480
-                 C 490,473 518,448 506,412"
-              stroke="#ffffff" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+            <!-- ══ C — arc propre et symétrique ══ -->
+            <path id="mc-c"
+              d="M 596,52
+                 C 596,5 452,5 452,242
+                 C 452,479 596,479 596,432"
+              stroke="#ede4d8" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+            <!-- Sérif haut C -->
+            <path id="mc-c-serif-t" d="M 569,52 L 623,52"
+              stroke="#ede4d8" stroke-width="7" stroke-linecap="butt" fill="none"/>
+            <!-- Sérif bas C -->
+            <path id="mc-c-serif-b" d="M 571,432 L 625,432"
+              stroke="#ede4d8" stroke-width="7" stroke-linecap="butt" fill="none"/>
           </svg>
         </div>
 
@@ -536,30 +540,18 @@ async function renderAccueil() {
 }
 
 function initHeroPremium() {
-  // Enable pointer-events on CTA once animations complete
-  setTimeout(() => {
-    const a = document.getElementById('hp-actions');
-    if (a) a.style.pointerEvents = 'auto';
-  }, 5000);
-
-  // Floating dust particles
+  // ── Particules flottantes ──────────────────────────────────────────────────
   const canvas = document.getElementById('hp-canvas');
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
-
-  const resize = () => {
-    canvas.width  = canvas.offsetWidth;
-    canvas.height = canvas.offsetHeight;
-  };
+  const resize = () => { canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight; };
   resize();
   window.addEventListener('resize', resize);
 
   const particles = Array.from({ length: 52 }, () => ({
-    x:       Math.random() * canvas.width,
-    y:       Math.random() * canvas.height,
-    r:       Math.random() * 0.9 + 0.2,
-    vx:      (Math.random() - 0.5) * 0.13,
-    vy:      -(Math.random() * 0.09 + 0.02),
+    x: Math.random() * canvas.width,  y: Math.random() * canvas.height,
+    r: Math.random() * 0.9 + 0.2,
+    vx: (Math.random() - 0.5) * 0.13, vy: -(Math.random() * 0.09 + 0.02),
     opacity: Math.random() * 0.045 + 0.012,
   }));
 
@@ -567,23 +559,77 @@ function initHeroPremium() {
   function tick() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     for (const p of particles) {
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(240,232,218,${p.opacity})`;
-      ctx.fill();
-      p.x += p.vx;
-      p.y += p.vy;
-      if (p.x < 0)             p.x = canvas.width;
-      if (p.x > canvas.width)  p.x = 0;
-      if (p.y < 0)             p.y = canvas.height;
-      if (p.y > canvas.height) p.y = 0;
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(240,232,218,${p.opacity})`; ctx.fill();
+      p.x += p.vx; p.y += p.vy;
+      if (p.x < 0) p.x = canvas.width;  if (p.x > canvas.width)  p.x = 0;
+      if (p.y < 0) p.y = canvas.height; if (p.y > canvas.height) p.y = 0;
     }
     rafId = requestAnimationFrame(tick);
   }
   tick();
-  // Cleanup when navigating away
   const hero = document.getElementById('hero-premium');
   if (hero) hero._stopParticles = () => cancelAnimationFrame(rafId);
+
+  // ── Animation manuscrite MC ───────────────────────────────────────────────
+  // Easing calligraphique : démarrage doux, ralentissement fin de trait
+  const EASE = 'cubic-bezier(0.33, 0, 0.25, 1)';
+
+  // Initialise un path : invisible, prêt à être tracé
+  function initPath(id) {
+    const el = document.getElementById(id);
+    if (!el) return null;
+    const len = el.getTotalLength();
+    el.style.strokeDasharray  = `${len}`;
+    el.style.strokeDashoffset = `${len}`;
+    el.style.opacity = '1';
+    return { el, len };
+  }
+
+  // Trace le path sur durationMs avec délai delayMs
+  function drawPath(id, durationMs, delayMs) {
+    const p = initPath(id);
+    if (!p) return;
+    setTimeout(() => {
+      p.el.style.transition = `stroke-dashoffset ${durationMs}ms ${EASE}`;
+      p.el.style.strokeDashoffset = '0';
+    }, delayMs);
+  }
+
+  // Fade-in doux (pour les sérifs)
+  function fadeIn(id, durationMs, delayMs) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.style.opacity = '0';
+    setTimeout(() => {
+      el.style.transition = `opacity ${durationMs}ms ease`;
+      el.style.opacity = '1';
+    }, delayMs);
+  }
+
+  // Séquence temporelle :
+  //   0ms    → jambe gauche M    (620ms)
+  //   520ms  → diagonales M V    (860ms)
+  //   1280ms → jambe droite M    (520ms)
+  //   1650ms → sérifs (fade)     (380ms)
+  //   2000ms → C calligraphique  (1200ms)
+  //   3400ms → glow final C      (transition)
+  // Total visible : ~3.2s ✓
+
+  drawPath('mc-m-l',     620,    0);
+  drawPath('mc-m-v',     860,  520);
+  drawPath('mc-m-r',     520, 1280);
+  fadeIn  ('mc-serif-t', 380, 1650);
+  fadeIn  ('mc-serif-b', 380, 1750);
+  drawPath('mc-c',         1200, 2000);
+  fadeIn  ('mc-c-serif-t',  380, 3000);
+  fadeIn  ('mc-c-serif-b',  380, 3100);
+
+  // Débloquer les CTA après animation
+  setTimeout(() => {
+    const a = document.getElementById('hp-actions');
+    if (a) a.style.pointerEvents = 'auto';
+  }, 3600);
 }
 
 async function selectAgent(id, name, email, strategy, strategyKey, budget) {
@@ -706,8 +752,15 @@ async function renderMarketplace() {
           <p>Trouvez l'article de luxe de vos rêves</p>
         </div>
 
-        <input class="search-bar" placeholder="Rechercher par marque ou modèle..." id="search-input"
-          oninput="S.filterSearch=this.value; reRenderGrid()" value="${S.filterSearch}">
+        <div class="search-bar-wrap" style="position:relative;max-width:600px;margin:0 auto 8px">
+          <input class="search-bar" placeholder="Rechercher par marque ou modèle..." id="search-input"
+            autocomplete="off"
+            oninput="S.filterSearch=this.value; reRenderGrid(); showSearchSuggestions(this.value)"
+            onfocus="showSearchSuggestions(this.value)"
+            onblur="setTimeout(()=>{const d=document.getElementById('search-suggestions');if(d)d.style.display='none'},180)"
+            value="${S.filterSearch}">
+          <div id="search-suggestions" class="search-suggestions" style="display:none"></div>
+        </div>
 
         <div class="chip-row">${catChips}</div>
 
@@ -783,6 +836,53 @@ async function renderMarketplace() {
       grid.querySelectorAll('.fade-up').forEach(el => el.classList.add('visible'));
     };
 
+    window.showSearchSuggestions = (q) => {
+      const box = document.getElementById('search-suggestions');
+      if (!box) return;
+      const term = (q || '').trim().toLowerCase();
+      if (!term) { box.style.display = 'none'; return; }
+
+      // Collect matching names and brands (deduplicated)
+      const seen = new Set();
+      const suggestions = [];
+      for (const p of S.products) {
+        const nameMatch  = p.name.toLowerCase().includes(term);
+        const brandMatch = (p.brand||'').toLowerCase().includes(term);
+        if (nameMatch && !seen.has(p.name)) { seen.add(p.name); suggestions.push({ label: p.name, sub: p.brand }); }
+        if (brandMatch && !seen.has('brand:'+p.brand)) { seen.add('brand:'+p.brand); suggestions.push({ label: p.brand, sub: 'Marque' }); }
+        if (suggestions.length >= 8) break;
+      }
+
+      if (!suggestions.length) { box.style.display = 'none'; return; }
+
+      box.innerHTML = suggestions.map((s, i) => `
+        <div class="search-suggestion-item" data-ssi="${i}">
+          <span class="ssi-label">${highlight(s.label, term)}</span>
+          <span class="ssi-sub">${s.sub || ''}</span>
+        </div>`).join('');
+
+      // Store suggestion labels for click handler
+      box._suggestions = suggestions;
+      box.querySelectorAll('.search-suggestion-item').forEach((el, i) => {
+        el.addEventListener('mousedown', (e) => {
+          e.preventDefault();
+          const label = box._suggestions[i].label;
+          const inp = document.getElementById('search-input');
+          if (inp) inp.value = label;
+          S.filterSearch = label;
+          reRenderGrid();
+          box.style.display = 'none';
+        });
+      });
+      box.style.display = 'block';
+    };
+
+    function highlight(text, term) {
+      const idx = text.toLowerCase().indexOf(term);
+      if (idx < 0) return text;
+      return text.slice(0, idx) + '<mark>' + text.slice(idx, idx + term.length) + '</mark>' + text.slice(idx + term.length);
+    }
+
   } catch(e) {
     app.innerHTML = `<div class="page"><div class="empty-state"><div class="empty-icon">⚠️</div><p>${e.message}</p></div></div>`;
   }
@@ -804,7 +904,10 @@ async function renderMarcheDecentralise(params = {}) {
     // Reset negotiation state
     S.negoNegotiations = [];
     S.negoRound = 0;
-    S.negoProduct = params.productId ? products.find(p => p.id == params.productId) : null;
+    S.negoProduct = null;
+
+    // Selected category for décentralisé
+    let decSelectedCat = params.category || (products[0]?.category || 'bags');
 
     function renderSetup() {
       const catMeta = {
@@ -816,10 +919,26 @@ async function renderMarcheDecentralise(params = {}) {
       };
       const categories = [...new Set(products.map(p => p.category))];
 
+      const renderCatCarousel = (cat) => {
+        const catProds = products.filter(p => p.category === cat).slice(0, 3);
+        const makeCard = (p) => `
+          <div class="pcarousel-card" style="cursor:default;pointer-events:none">
+            <div class="pcarousel-img" style="background-image:url('${getProductImage(p)}')"></div>
+            <div class="pcarousel-body">
+              <div class="pcarousel-brand">${p.brand}</div>
+              <div class="pcarousel-name">${p.name}</div>
+              <div class="pcarousel-range">${fmt(p.priceMin)} — ${fmt(p.priceMax)}</div>
+            </div>
+          </div>`;
+        const cards = catProds.map(makeCard).join('');
+        const cardsDupe = catProds.map(makeCard).join('');
+        const duration = Math.max(14, catProds.length * 5);
+        return `<div class="product-carousel"><div class="pcarousel-track" style="animation-duration:${duration}s">${cards}${cardsDupe}</div></div>`;
+      };
+
       app.innerHTML = `
         <div class="cfg-wrap">
           <div class="cfg-hero">
-            <div class="cfg-hero-bg" style="background-image:url('${HERO_IMAGES[1]}')"></div>
             <div class="cfg-hero-veil"></div>
             <div class="cfg-hero-content">
               <div class="cfg-eyebrow">◆ &nbsp; Marché Décentralisé &nbsp; ◆</div>
@@ -842,20 +961,21 @@ async function renderMarcheDecentralise(params = {}) {
               </div>
               <div class="cfg-sep"></div>
               <div class="cfg-field">
-                <label class="cfg-label">Catégorie</label>
+                <label class="cfg-label">Catégorie à négocier</label>
                 <div class="cat-chips" id="cat-chips">
-                  ${categories.map(c => `<button class="cat-chip ${c === (S.negoProduct?.category || categories[0]) ? 'active' : ''}" onclick="selectCat('${c}')">${catMeta[c]?.icon || '◆'} ${catMeta[c]?.label || c}</button>`).join('')}
+                  ${categories.map(c => `<button class="cat-chip ${c === decSelectedCat ? 'active' : ''}" onclick="selectDecCat('${c}')">${catMeta[c]?.icon || '◆'} ${catMeta[c]?.label || c}</button>`).join('')}
                 </div>
               </div>
               <div class="cfg-field">
-                <label class="cfg-label">Article <span id="cat-count" style="color:var(--text3);font-size:11px;font-weight:400;letter-spacing:0"></span></label>
-                <div class="product-carousel" id="product-carousel"></div>
+                <label class="cfg-label" style="margin-bottom:6px">Vendeurs en compétition <span id="dec-vendor-count" style="color:var(--gold);font-size:11px;font-weight:400"></span></label>
+                <div id="dec-vendor-preview">${renderCatCarousel(decSelectedCat)}</div>
+                <div style="font-size:11px;color:var(--text3);margin-top:6px;padding-left:2px">◆ Le système sélectionne automatiquement jusqu'à 3 articles de cette catégorie</div>
               </div>
               <div class="cfg-two-col">
                 <div class="cfg-field">
-                  <label class="cfg-label">Offre initiale</label>
+                  <label class="cfg-label">Votre offre initiale</label>
                   <div class="cfg-euro-wrap">
-                    <input class="cfg-input" type="text" inputmode="numeric" id="initial-offer" placeholder="ex : 9 000" oninput="updatePriceEstimate()">
+                    <input class="cfg-input" type="text" inputmode="numeric" id="initial-offer" placeholder="ex : 9 000" oninput="updateDecEstimate()">
                     <span class="cfg-euro-sign">€</span>
                   </div>
                   <div id="cfg-estimate" class="cfg-estimate" style="display:none"></div>
@@ -867,115 +987,87 @@ async function renderMarcheDecentralise(params = {}) {
               </div>
               <div class="cfg-info-box">
                 <span class="cfg-info-icon">ℹ</span>
-                <span>Le système négocie simultanément avec <strong>tous les vendeurs</strong> de la catégorie — mettez-les en concurrence pour le meilleur prix.</span>
+                <span>Votre offre est soumise à <strong>tous les vendeurs</strong> de la catégorie — le meilleur deal l'emporte.</span>
               </div>
               <button class="cfg-cta" onclick="startDecentralise()">
                 <span class="cfg-cta-gem">◆</span>
                 Lancer la négociation
                 <span class="cfg-cta-arrow">→</span>
               </button>
-              <div id="cfg-comparateur-btn" style="display:none;margin-top:12px">
-                <button class="btn btn-secondary" style="width:100%" onclick="window._launchComparateur && window._launchComparateur()">≡ Comparer les stratégies →</button>
-              </div>
             </div>
           </div>
         </div>`;
 
-      window.selectCat = (cat) => {
-        document.querySelectorAll('.cat-chip').forEach(c =>
+      window.selectDecCat = (cat) => {
+        decSelectedCat = cat;
+        document.querySelectorAll('#cat-chips .cat-chip').forEach(c =>
           c.classList.toggle('active', c.textContent.trim().startsWith(catMeta[cat]?.icon || cat))
         );
         const catProds = products.filter(p => p.category === cat);
-        const countEl = document.getElementById('cat-count');
-        if (countEl) countEl.textContent = `(${catProds.length} article${catProds.length > 1 ? 's' : ''})`;
-        const carousel = document.getElementById('product-carousel');
-        if (!carousel) return;
-
-        // Build cards once, duplicate for infinite loop (like the ticker)
-        const makeCard = (p, withId) => `
-          <div class="pcarousel-card ${S.negoProduct?.id == p.id ? 'pcarousel-selected' : ''}"
-               onclick="selectProduct(${p.id})"
-               data-pid="${p.id}"
-               ${withId ? `id="pc-${p.id}"` : ''}>
-            <div class="pcarousel-img" style="background-image:url('${getProductImage(p)}')"></div>
-            <div class="pcarousel-body">
-              <div class="pcarousel-brand">${p.brand || cat}</div>
-              <div class="pcarousel-name">${p.name}</div>
-              <div class="pcarousel-range">${fmt(p.priceMin)} — ${fmt(p.priceMax)}</div>
-            </div>
-            <div class="pcarousel-check">✓</div>
-          </div>`;
-
-        const cards     = catProds.map(p => makeCard(p, true)).join('');
-        const cardsDupe = catProds.map(p => makeCard(p, false)).join('');
-        // Adjust speed: more cards = slower scroll
-        const duration = Math.max(18, catProds.length * 4);
-        carousel.innerHTML = `<div class="pcarousel-track" style="animation-duration:${duration}s">${cards}${cardsDupe}</div>`;
-      };
-
-      window.selectProduct = (pid) => {
-        const p = products.find(x => x.id == pid);
-        if (!p) return;
-        S.negoProduct = p;
-        // Update all copies (original + duplicate in infinite loop)
-        document.querySelectorAll('.pcarousel-card').forEach(c => c.classList.remove('pcarousel-selected'));
-        document.querySelectorAll(`[data-pid="${pid}"]`).forEach(c => c.classList.add('pcarousel-selected'));
+        const countEl = document.getElementById('dec-vendor-count');
+        const n = Math.min(catProds.length, 3);
+        if (countEl) countEl.textContent = `(${n} vendeur${n > 1 ? 's' : ''} en lice)`;
+        const preview = document.getElementById('dec-vendor-preview');
+        if (preview) preview.innerHTML = renderCatCarousel(cat);
+        // Reset offer hint
+        const catMin = Math.min(...catProds.map(p => p.priceMin));
+        const catMax = Math.max(...catProds.map(p => p.priceMax));
         const offerInput = document.getElementById('initial-offer');
-        if (offerInput) {
-          offerInput.value = Math.round(p.priceMax * 0.78).toLocaleString('fr-FR');
-          updatePriceEstimate();
+        if (offerInput && !offerInput.value) {
+          offerInput.placeholder = `ex : ${Math.round(catMax * 0.75).toLocaleString('fr-FR')}`;
         }
-        const compBtn = document.getElementById('cfg-comparateur-btn');
-        if (compBtn) compBtn.style.display = 'block';
-        window._launchComparateur = () => {
-          const offer = document.getElementById('initial-offer')?.value;
-          navigate('comparateur', { productId: p.id, offer: offer || Math.round(p.priceMin * 0.88) });
-        };
+        updateDecEstimate();
       };
 
-      window.updatePriceEstimate = () => {
-        if (!S.negoProduct) return;
-        const p = S.negoProduct;
+      window.updateDecEstimate = () => {
+        const catProds = products.filter(p => p.category === decSelectedCat).slice(0, 3);
+        if (!catProds.length) return;
+        // Moyenne des priceMin des vendeurs en compétition (pas le max global)
+        const avgMin = Math.round(catProds.reduce((s, p) => s + p.priceMin, 0) / catProds.length);
+        const avgMax = Math.round(catProds.reduce((s, p) => s + p.priceMax, 0) / catProds.length);
+        const recommended = Math.round(avgMin * 0.9);
         const estimateEl = document.getElementById('cfg-estimate');
         if (!estimateEl) return;
         const userOffer = parseFloat(String(document.getElementById('initial-offer')?.value || '0').replace(/\s/g,'').replace(',','.')) || 0;
-        const goodOffer = Math.round(p.priceMax * 0.78);
-        const estimate  = Math.round(p.priceMin * 0.95 + p.priceMax * 0.35);
-        const strategy  = S.activeAgent ? S.activeAgent.strategy : 'Adaptatif';
-        const pct       = userOffer > 0 ? Math.round((userOffer / p.priceMax) * 100) : null;
+        if (!userOffer) { estimateEl.style.display = 'none'; return; }
         estimateEl.style.display = 'block';
-        if (userOffer > 0 && userOffer < p.priceMin * 0.6) {
-          estimateEl.innerHTML = `⚠️ Offre trop basse (${pct}% du max) — refus probable. Recommandé : <strong>${goodOffer.toLocaleString('fr-FR')} €</strong>`;
+        if (userOffer < avgMin * 0.55) {
+          estimateEl.innerHTML = `⚠️ Offre très basse — refus probable. Recommandé : <strong>${recommended.toLocaleString('fr-FR')} €</strong> (moy. plancher vendeurs)`;
           estimateEl.style.borderLeftColor = 'var(--crimson)';
           estimateEl.style.background = 'rgba(196,18,48,0.08)';
           estimateEl.style.color = 'var(--crimson2)';
-        } else if (userOffer > 0 && userOffer < p.priceMin) {
-          estimateEl.innerHTML = `⚠️ Offre inférieure au minimum (${fmt(p.priceMin)}) — risque d'échec.`;
+        } else if (userOffer < avgMin * 0.75) {
+          estimateEl.innerHTML = `⚠️ Offre en dessous du plancher moyen (${fmt(avgMin)}) — risque d'échec.`;
           estimateEl.style.borderLeftColor = '#C9A84C';
           estimateEl.style.background = 'rgba(201,168,76,0.08)';
           estimateEl.style.color = 'var(--gold)';
         } else {
-          const pctStr = pct !== null ? ` (${pct}% du max)` : '';
-          estimateEl.innerHTML = `◆ Accord probable autour de <strong>${estimate.toLocaleString('fr-FR')} €</strong>${pctStr} · ${strategy}`;
+          estimateEl.innerHTML = `◆ Fourchette moyenne des vendeurs : ${fmt(avgMin)} — ${fmt(avgMax)} · ${S.activeAgent?.strategy || 'Adaptatif'}`;
           estimateEl.style.borderLeftColor = 'var(--gold)';
           estimateEl.style.background = 'var(--gold-dim)';
           estimateEl.style.color = 'var(--gold)';
         }
       };
 
-      selectCat(S.negoProduct?.category || categories[0]);
-      if (S.negoProduct) selectProduct(S.negoProduct.id);
+      // Init count
+      const initProds = products.filter(p => p.category === decSelectedCat);
+      const initN = Math.min(initProds.length, 3);
+      const initCountEl = document.getElementById('dec-vendor-count');
+      if (initCountEl) initCountEl.textContent = `(${initN} vendeur${initN > 1 ? 's' : ''} en lice)`;
     }
 
     renderSetup();
 
     window.startDecentralise = async () => {
-      if (!S.negoProduct) { toast('Sélectionnez un article', 'error'); return; }
       const offer = parseFloat(String(document.getElementById('initial-offer')?.value || '').replace(/\s/g, '').replace(',', '.'));
       const maxR  = parseInt(document.getElementById('max-rounds')?.value) || 10;
 
       if (!offer || offer <= 0) {
         toast('Entrez une offre initiale valide', 'error');
+        return;
+      }
+      if (!decSelectedCat) {
+        toast('Sélectionnez une catégorie', 'error');
         return;
       }
       S.negoMaxRounds = maxR;
@@ -1013,10 +1105,11 @@ async function renderMarcheDecentralise(params = {}) {
         // Marché décentralisé = comparaison compétitive :
         // l'acheteur négocie simultanément avec tous les vendeurs de la catégorie
         // (chaque vendeur propose son propre produit — le meilleur prix gagne)
-        const sameCat = products.filter(p =>
-          p.category === S.negoProduct.category && p.sellerId !== S.negoProduct.sellerId
-        );
-        const vendors = [S.negoProduct, ...sameCat.slice(0, 2)]; // produit choisi + 2 concurrents max
+        // Marché décentralisé : l'acheteur choisit une catégorie,
+        // le système sélectionne automatiquement jusqu'à 3 articles de cette catégorie
+        const vendors = products.filter(p => p.category === decSelectedCat).slice(0, 3);
+        // Stocker un produit référence pour les labels
+        S.negoProduct = vendors[0] || null;
         const sellerStrategyMap = (name) => {
           const n = (name || '').toLowerCase();
           if (n.includes('trystan')     ) return 'GREEDY';
@@ -1146,7 +1239,7 @@ async function renderMarcheDecentralise(params = {}) {
           <div class="page" id="nego-page">
             <div class="page-header">
               <h1>Marché Décentralisé</h1>
-              <p>Comparaison de <strong>${vendors.length} ${catLabel[S.negoProduct?.category] || S.negoProduct?.category || 'articles'}</strong> — <em>${S.activeAgent.name}</em> (${S.activeAgent.strategy})</p>
+              <p>Comparaison de <strong>${S.negoNegotiations.length} ${catLabel[S.negoProduct?.category] || S.negoProduct?.category || 'articles'}</strong> — <em>${S.activeAgent.name}</em> (${S.activeAgent.strategy})</p>
               <p style="font-size:12px;color:var(--grey);margin-top:4px">Tu proposes un budget : chaque vendeur répond avec son propre article · le meilleur deal gagne</p>
             </div>
             <div class="round-progress" id="nego-progress-bar">
@@ -1283,16 +1376,17 @@ async function renderMarcheDecentralise(params = {}) {
       if (doneAll) {
         // Enregistrer stats réelles par stratégie
         S.negoNegotiations.forEach(n => recordNegoStat(n.status));
-        // Rating prompt si au moins un accord
         const firstAgreed = S.negoNegotiations.find(n => n.status === 'AGREED');
-        if (firstAgreed) {
-          setTimeout(() => showRatingPrompt({
-            product: firstAgreed.productName,
-            seller:  firstAgreed.sellerName,
-            finalPrice: firstAgreed.finalPrice,
-            market: 'decentralise',
-          }), 1200);
-        }
+        const ratingHtml = firstAgreed ? `
+          <div class="ag-rating-inline" style="margin-top:20px">
+            <div class="ag-rating-label">Notez cette négociation</div>
+            <div class="ag-rating-stars" id="dec-stars">
+              ${[1,2,3,4,5].map(n=>`<span class="rating-star" data-v="${n}"
+                onclick="submitRating(${n},'${(firstAgreed.productName||'').replace(/'/g,"\\'")}','${(firstAgreed.sellerName||'').replace(/'/g,"\\'")}',${firstAgreed.finalPrice},'decentralise'); document.querySelectorAll('#dec-stars .rating-star').forEach((s,i)=>{s.style.color=i<${n}?'var(--gold)':'var(--grey)';})"
+                onmouseenter="document.querySelectorAll('#dec-stars .rating-star').forEach((s,i)=>{s.style.color=i<${n}?'var(--gold)':'var(--grey)';})"
+                onmouseleave="document.querySelectorAll('#dec-stars .rating-star').forEach(s=>s.style.color='var(--grey)')">★</span>`).join('')}
+            </div>
+          </div>` : '';
         const surplusSummary = agreed.length > 0 ? `
           <div class="surplus-summary">
             ${agreed.map(n => {
@@ -1327,6 +1421,7 @@ async function renderMarcheDecentralise(params = {}) {
                 <span class="conv-leg-dot">⊙ accord</span>
               </div>
             </div>
+            ${ratingHtml}
             <div class="btn-row" style="margin-top:20px;justify-content:center">
               <button class="btn btn-primary" onclick="navigate('historique')">Voir dans l'historique</button>
               <button class="btn btn-secondary" onclick="navigate('marche-decentralise')">Nouvelle négociation</button>
@@ -1505,7 +1600,6 @@ async function renderMarcheCentralise() {
 
         <!-- Hero cinématique -->
         <div class="cfg-hero">
-          <div class="cfg-hero-bg" style="background-image:url('${HERO_IMAGES[0]}')"></div>
           <div class="cfg-hero-veil"></div>
           <div class="cfg-hero-content">
             <div class="cfg-eyebrow">◆ &nbsp; Marché Centralisé &nbsp; ◆</div>
@@ -1804,6 +1898,16 @@ async function renderMarcheCentralise() {
           rounds: actualRound,
         }));
         localStorage.setItem('sa7_centralise_history', JSON.stringify(hist.slice(-200)));
+        // Rating post-enchère
+        const firstTx = transactions[0];
+        if (firstTx) {
+          setTimeout(() => showRatingPrompt({
+            product: firstTx.product || 'Article',
+            seller: firstTx.sellerShort || 'Vendeur',
+            finalPrice: firstTx.price,
+            market: 'centralise',
+          }), 1400);
+        }
       }
     };
 
@@ -1864,7 +1968,6 @@ async function renderAchatGroupe() {
       app.innerHTML = `
         <div class="cfg-wrap">
           <div class="cfg-hero">
-            <div class="cfg-hero-bg" style="background-image:url('${HERO_IMAGES[0]}')"></div>
             <div class="cfg-hero-veil"></div>
             <div class="cfg-hero-content">
               <div class="cfg-eyebrow">◆ &nbsp; Achat Groupé &nbsp; ◆</div>
@@ -2315,7 +2418,6 @@ async function renderNegociation1v1(params = {}) {
       app.innerHTML = `
         <div class="cfg-wrap">
           <div class="cfg-hero">
-            <div class="cfg-hero-bg" style="background-image:url('${HERO_IMAGES[1]}')"></div>
             <div class="cfg-hero-veil"></div>
             <div class="cfg-hero-content">
               <div class="cfg-eyebrow">◆ &nbsp; Négociation 1v1 &nbsp; ◆</div>
@@ -3782,8 +3884,18 @@ async function renderComparateur(params = {}) {
         <p>${p.name} — Budget acheteur de départ : ${fmt(buyerStart)}</p>
       </div>
       <div class="comparateur-grid">${cols}</div>
-      <div style="margin-top:24px">
+      <div style="margin-top:24px;display:flex;align-items:center;gap:24px;flex-wrap:wrap">
         <button class="btn btn-secondary btn-sm" onclick="navigate('marche-decentralise', {productId:${p.id}})">← Retour à la négociation</button>
+        ${results.some(r => r.sim.status === 'AGREED') ? `
+        <div class="ag-rating-inline" style="margin:0">
+          <div class="ag-rating-label">Notez cette analyse</div>
+          <div class="ag-rating-stars" id="comp-stars">
+            ${[1,2,3,4,5].map(n=>`<span class="rating-star" data-v="${n}"
+              onclick="submitRating(${n},'${(p.name||'').replace(/'/g,"\\'")}','Comparateur',${results.find(r=>r.sim.status==='AGREED')?.sim.finalPrice||0},'comparateur'); document.querySelectorAll('#comp-stars .rating-star').forEach((s,i)=>{s.style.color=i<${n}?'var(--gold)':'var(--grey)';})"
+              onmouseenter="document.querySelectorAll('#comp-stars .rating-star').forEach((s,i)=>{s.style.color=i<${n}?'var(--gold)':'var(--grey)';})"
+              onmouseleave="document.querySelectorAll('#comp-stars .rating-star').forEach(s=>s.style.color='var(--grey)')">★</span>`).join('')}
+          </div>
+        </div>` : ''}
       </div>
     </div>`;
 }
